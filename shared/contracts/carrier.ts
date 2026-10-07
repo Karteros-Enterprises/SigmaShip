@@ -1,4 +1,5 @@
 import type { Money, Package } from '~/types/domain'
+import type { PickupAdapter } from '#shared/contracts/pickup'
 
 export interface CanonicalAddress {
   contactName: string
@@ -63,10 +64,12 @@ export interface CarrierTrackingEvent {
   }
 }
 
-export interface CarrierAdapter {
+export interface CarrierAdapter extends PickupAdapter {
   readonly key: string
 
-  getRates(request: RateRequest): Promise<CarrierRate[]>
+  getRates(
+    request: RateRequest
+  ): Promise<CarrierRate[]>
 
   purchaseLabel(
     request: LabelPurchaseRequest
