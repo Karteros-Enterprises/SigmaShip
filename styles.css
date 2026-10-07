@@ -38,3 +38,15 @@
 @media(max-width:1180px){.ship-layout{grid-template-columns:1fr}.ship-overview{position:static;grid-row:1}.ship-steps{grid-template-columns:repeat(6,1fr);overflow:auto}.ship-steps button{min-width:120px}}
 @media(max-width:820px){.address-pair{grid-template-columns:1fr;gap:54px}.swap-bridge{top:50%;transform:translate(-50%,-50%)}.swap-bridge .swap-btn{transform:rotate(90deg)}}
 @media(max-width:560px){.address-pair .form-grid{grid-template-columns:1fr}.address-pair .form-field.full{grid-column:auto}.address-pair .address-options{grid-template-columns:1fr}}
+
+/* Wide shipping workspace */
+.shipment-page{width:calc(100% - 32px)!important;max-width:1780px!important;margin-left:auto!important;margin-right:auto!important;padding-left:0!important;padding-right:0!important}
+.ship-layout{grid-template-columns:minmax(1050px,1fr) 260px!important;gap:34px!important;width:100%}
+.ship-main{width:100%;min-width:0}
+.ship-overview{width:260px;justify-self:end}
+.overview-card{padding:20px}
+.address-pair{width:100%;grid-template-columns:minmax(500px,1fr) minmax(500px,1fr)!important;gap:18px!important}
+.address-pair>.address-card{padding:24px}
+@media(min-width:1500px){.shipment-page{width:calc(100% - 48px)!important}.ship-layout{grid-template-columns:minmax(1180px,1fr) 250px!important;gap:40px!important}.ship-overview{width:250px}}
+@media(max-width:1399px){.ship-layout{grid-template-columns:1fr!important}.ship-overview{width:100%;position:static;grid-row:1}.address-pair{grid-template-columns:repeat(2,minmax(0,1fr))!important}.ship-steps{grid-template-columns:repeat(6,minmax(120px,1fr))}}
+@media(max-width:820px){.address-pair{grid-template-columns:1fr!important}}
