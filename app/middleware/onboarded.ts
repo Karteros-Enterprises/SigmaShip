@@ -9,20 +9,17 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   const { data, error } = await supabase
-    .from('memberships')
-    .select('organization_id')
+    .from('onboarding_states')
+    .select('organization_id, completed')
     .eq('user_id', user.value.id)
-    .limit(1)
     .maybeSingle()
 
   if (error) {
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Unable to load your SigmaShip workspace.'
-    })
+    console.error('Unable to read onboarding state', error)
+    return navigateTo('/onboarding')
   }
 
-  if (!data?.organization_id) {
+  if (!data?.organization_id || !data.completed) {
     return navigateTo('/onboarding')
   }
 })
