@@ -599,3 +599,237 @@ body {
     width: 100%;
   }
 }
+
+
+/* Authentication and onboarding */
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
+  background: #f7f6f1;
+  color: #0b0c0d;
+}
+
+.auth-panel {
+  width: min(520px, 100%);
+  margin: 0 auto;
+  padding: 56px clamp(28px, 6vw, 88px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-brand {
+  position: absolute;
+  top: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-brand span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: #0b0c0d;
+  color: #d8ff3e;
+  font-size: 20px;
+}
+
+.auth-heading {
+  margin-bottom: 34px;
+}
+
+.auth-eyebrow {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.auth-heading h1,
+.onboarding-copy h1 {
+  margin: 0;
+  max-width: 720px;
+  font-size: clamp(44px, 6vw, 78px);
+  font-weight: 650;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.auth-heading p:not(.auth-eyebrow),
+.onboarding-copy > p:last-child {
+  max-width: 520px;
+  margin: 20px 0 0;
+  color: #64676a;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.auth-form {
+  display: grid;
+  gap: 18px;
+}
+
+.auth-switch {
+  margin: 24px 0 0;
+  color: #737679;
+  font-size: 13px;
+}
+
+.auth-switch a {
+  color: #0b0c0d;
+  font-weight: 700;
+}
+
+.auth-visual {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  padding: 56px;
+  display: flex;
+  align-items: end;
+  background:
+    radial-gradient(circle at 68% 24%, rgba(216, 255, 62, 0.2), transparent 24%),
+    #0b0c0d;
+  color: white;
+}
+
+.auth-visual-copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 12px;
+}
+
+.auth-visual-copy span {
+  color: #d8ff3e;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.auth-visual-copy strong {
+  font-size: clamp(48px, 6vw, 88px);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+
+.auth-signal {
+  position: absolute;
+  inset: 10% -20% auto 20%;
+  height: 62%;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  transform: rotate(-12deg);
+  opacity: 0.8;
+}
+
+.auth-signal i {
+  flex: 1;
+  min-width: 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d8ff3e, rgba(216, 255, 62, 0.03));
+}
+
+.auth-signal i:nth-child(3n + 1) { height: 42%; }
+.auth-signal i:nth-child(3n + 2) { height: 78%; }
+.auth-signal i:nth-child(3n) { height: 100%; }
+
+.onboarding-page {
+  min-height: 100vh;
+  padding: 36px;
+  background: #0b0c0d;
+  color: white;
+}
+
+.onboarding-shell {
+  min-height: calc(100vh - 72px);
+  padding: clamp(28px, 5vw, 72px);
+  border-radius: 24px;
+  background: #f7f6f1;
+  color: #0b0c0d;
+}
+
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.onboarding-header .auth-brand {
+  position: static;
+}
+
+.onboarding-step {
+  color: #7a7d80;
+  font: 700 11px/1 monospace;
+  letter-spacing: 0.12em;
+}
+
+.onboarding-grid {
+  min-height: 70vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
+  gap: clamp(48px, 8vw, 120px);
+  align-items: center;
+}
+
+.onboarding-copy h1 {
+  font-size: clamp(48px, 6vw, 86px);
+}
+
+.onboarding-form {
+  display: grid;
+  gap: 22px;
+  padding: clamp(28px, 4vw, 52px);
+  border: 1px solid #deded8;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.08);
+}
+
+.slug-prefix {
+  white-space: nowrap;
+  color: #85888b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-visual {
+    display: none;
+  }
+
+  .auth-panel {
+    min-height: 100vh;
+  }
+
+  .onboarding-page {
+    padding: 0;
+  }
+
+  .onboarding-shell {
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  .onboarding-grid {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    padding: 96px 0 32px;
+  }
+}
