@@ -24,21 +24,20 @@ onMounted(async () => {
     return
   }
 
-  const { data: membership, error } = await supabase
-    .from('memberships')
-    .select('organization_id')
+  const { data: onboardingState, error } = await supabase
+    .from('onboarding_states')
+    .select('organization_id, completed')
     .eq('user_id', user.value.id)
-    .limit(1)
     .maybeSingle()
 
   checkingWorkspace.value = false
 
   if (error) {
-    errorMessage.value = 'Unable to verify your SigmaShip workspace.'
+    console.warn('Unable to read onboarding state; allowing workspace recovery', error)
     return
   }
 
-  if (membership?.organization_id) {
+  if (onboardingState?.organization_id && onboardingState.completed) {
     await navigateTo('/ship', { replace: true })
   }
 })
