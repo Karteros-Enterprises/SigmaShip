@@ -167,7 +167,202 @@ function integrations() {
   `);
 }
 
-function wireIntegrations(){if(location.hash!=='#integrations')return;let s=ssLoad();s.integrations=s.integrations||{};document.querySelectorAll('.integration-store-card').forEach(card=>{let key=card.dataset.integration,b=card.querySelector('.integration-connect'),state=card.querySelector('.integration-state'),connected=Boolean(s.integrations[key]);state.textContent=connected?'CONNECTED':'NOT CONNECTED';state.classList.toggle('off',!connected);card.classList.toggle('connected',connected);b.textContent=connected?'Manage':'Connect';b.onclick=()=>{if(connected){ssConfirm('Disconnect '+b.dataset.name+'?',()=>{let n=ssLoad();n.integrations=n.integrations||{};delete n.integrations[key];ssSave(n);render()})}else{let n=ssLoad();n.integrations=n.integrations||{};n.integrations[key]={name:b.dataset.name,connectedAt:new Date().toISOString()};ssSave(n);ssToast(b.dataset.name+' connected in demo mode.');render()}}})}
+function integrationSetup() {
+  const params = new URLSearchParams(location.hash.split('?')[1] || '');
+  const key = params.get('provider') || 'shopify';
+  const provider = window.SIGMASHIP_INTEGRATIONS?.[key];
+
+  if (!provider) {
+    return shell('integrations', `
+      <div class="toolbar">
+        <div>
+          <div class="eyebrow">Integrations</div>
+          <h1>Integration not found</h1>
+        </div>
+        <button class="ghost" data-route="integrations">Back to integrations</button>
+      </div>
+    `);
+  }
+
+  const state = ssLoad();
+  const saved = state.integrationConfigs?.[key] || {};
+  const isConfigured = Boolean(saved.configured);
+
+  const fields = provider.fields.map(([label, name, defaultValue]) => {
+    const value = saved[name] ?? defaultValue ?? '';
+    return `
+      <div class="form-field">
+        <label for="integration-${name}">${label}</label>
+        <input
+          id="integration-${name}"
+          name="${name}"
+          value="${value}"
+          autocomplete="off"
+          placeholder="Not configured"
+        >
+      </div>
+    `;
+  }).join('');
+
+  const secretRows = provider.secretFields.map(secret => `
+    <div class="credential-row">
+      <div>
+        <strong>${secret}</strong>
+        <span>Server-side secret</span>
+      </div>
+      <span class="credential-empty">Not configured</span>
+    </div>
+  `).join('');
+
+  const permissions = provider.permissions
+    .map(permission => `<li>${permission}</li>`)
+    .join('');
+
+  return shell('integrations', `
+    <div class="integration-setup-page">
+      <button class="back-link" data-route="integrations">← All integrations</button>
+
+      <div class="integration-setup-hero">
+        <div class="integration-provider-logo">
+          <img
+            src="https://www.google.com/s2/favicons?domain=${provider.domain}&sz=128"
+            alt="${provider.name} logo"
+          >
+        </div>
+
+        <div>
+          <div class="eyebrow">Integration setup</div>
+          <h1>Connect ${provider.name}</h1>
+          <p class="muted">${provider.accountLabel} · ${provider.type}</p>
+        </div>
+
+        <span class="integration-status ${isConfigured ? 'ready' : ''}">
+          ${isConfigured ? 'CONFIGURATION SAVED' : 'NOT CONFIGURED'}
+        </span>
+      </div>
+
+      <div class="integration-setup-grid">
+        <form class="card integration-config-form" id="integration-config-form">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">Application configuration</div>
+              <h2>Connection details</h2>
+              <p class="muted">
+                Leave provider-issued values blank until SigmaShip receives them.
+              </p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            ${fields}
+          </div>
+
+          <input type="hidden" name="providerKey" value="${key}">
+
+          <div class="integration-form-actions">
+            <button type="button" class="ghost" data-route="integrations">Cancel</button>
+            <button type="submit" class="primary">Save configuration</button>
+          </div>
+        </form>
+
+        <aside class="integration-setup-sidebar">
+          <div class="card">
+            <div class="eyebrow">Credentials</div>
+            <h3>Protected secrets</h3>
+            <p class="muted">
+              These values will be entered into the backend secret vault, never saved in this browser or committed to GitHub.
+            </p>
+            <div class="credential-list">${secretRows}</div>
+          </div>
+
+          <div class="card">
+            <div class="eyebrow">Access</div>
+            <h3>Required capabilities</h3>
+            <ul class="integration-permissions">${permissions}</ul>
+          </div>
+        </aside>
+      </div>
+
+      <div class="card integration-connection-plan">
+        <div>
+          <div class="eyebrow">Implementation</div>
+          <h3>What happens when this goes live</h3>
+        </div>
+
+        <div class="connection-flow">
+          <span>1. Authorize merchant</span>
+          <b>→</b>
+          <span>2. Import orders</span>
+          <b>→</b>
+          <span>3. Ship in SigmaShip</span>
+          <b>→</b>
+          <span>4. Sync tracking</span>
+        </div>
+
+        <p class="muted">${provider.notes}</p>
+      </div>
+    </div>
+  `, true);
+}
+
+function wireIntegrations() {
+  if (location.hash !== '#integrations') return;
+
+  const state = ssLoad();
+  const configs = state.integrationConfigs || {};
+
+  document.querySelectorAll('.integration-store-card').forEach(card => {
+    const key = card.dataset.integration;
+    const button = card.querySelector('.integration-connect');
+    const status = card.querySelector('.integration-state');
+    const configured = Boolean(configs[key]?.configured);
+
+    status.textContent = configured ? 'CONFIGURATION SAVED' : 'NOT CONFIGURED';
+    status.classList.toggle('off', !configured);
+    card.classList.toggle('connected', configured);
+    button.textContent = configured ? 'Manage' : 'Set up';
+
+    button.onclick = () => {
+      location.hash = `integration-setup?provider=${encodeURIComponent(key)}`;
+    };
+  });
+}
+
+function wireIntegrationSetup() {
+  if (!location.hash.startsWith('#integration-setup')) return;
+
+  const form = document.getElementById('integration-config-form');
+  if (!form) return;
+
+  form.onsubmit = event => {
+    event.preventDefault();
+
+    const values = Object.fromEntries(new FormData(form));
+    const key = values.providerKey;
+    delete values.providerKey;
+
+    const state = ssLoad();
+    state.integrationConfigs = state.integrationConfigs || {};
+    state.integrationConfigs[key] = {
+      ...values,
+      configured: true,
+      updatedAt: new Date().toISOString()
+    };
+
+    // Amazon is one SP-API connection even though it appears in two catalogue sections.
+    if (key === 'amazon' || key === 'amazon-marketplace') {
+      state.integrationConfigs.amazon = state.integrationConfigs[key];
+      state.integrationConfigs['amazon-marketplace'] = state.integrationConfigs[key];
+    }
+
+    ssSave(state);
+    ssToast('Configuration saved. Provider credentials can be added when issued.');
+    setTimeout(() => {
+      location.hash = 'integrations';
+    }, 350);
+  };
+}
+
 function storeSettings(){return shell('store-settings',`<div class="eyebrow">E-Commerce / Store Settings</div><div class="toolbar"><div><h1>Store settings</h1><span class="muted">Connect sales channels and control how orders flow into SigmaShip.</span></div><button class="primary" onclick="integrationDemo('Store')">+ Connect store</button></div><div class="store-grid"><div class="store-card connected"><div class="store-mark">S</div><div><span class="status-dot">CONNECTED</span><h3>Shopify</h3><p class="muted">Ana's Estate · Orders and fulfillment syncing</p></div><button class="ghost">Manage</button></div><div class="store-card"><div class="store-mark">W</div><div><span class="status-dot off">NOT CONNECTED</span><h3>WooCommerce</h3><p class="muted">Import orders and sync tracking back automatically.</p></div><button class="ghost" onclick="integrationDemo('WooCommerce')">Connect</button></div></div><div class="settings-grid"><div class="card"><h3>Order import</h3><p class="muted">Automatically import paid, unfulfilled orders.</p><label class="switch-row"><span>Auto import orders</span><input type="checkbox" checked></label></div><div class="card"><h3>Fulfillment sync</h3><p class="muted">Send carrier and tracking details back after label purchase.</p><label class="switch-row"><span>Sync tracking</span><input type="checkbox" checked></label></div></div>`)}
 function carrierAccounts(){return shell('carrier-accounts',`<div class="eyebrow">Settings / Carrier Accounts</div><div class="toolbar"><div><h1>Carrier accounts</h1><span class="muted">Use your own negotiated carrier rates through SigmaShip.</span></div><button class="primary" onclick="addCarrierAccount()">+ Connect carrier account</button></div><div class="notice"><strong>Bring your own account</strong><br>Ship on your own carrier contract while using SigmaShip to quote, create labels, track shipments and manage orders. A SigmaShip processing fee applies to labels purchased using a connected carrier account.</div><div class="kpis"><div class="kpi"><small>Connected</small><strong id="carrier-connected-count">0</strong></div><div class="kpi"><small>Active</small><strong id="carrier-active-count">0</strong></div><div class="kpi"><small>BYOA fee</small><strong>$1.00</strong><span class="muted">demo / label</span></div></div><div id="carrier-account-list" class="list-cards"></div><div class="settings-grid"><div class="card"><h3>Rate preference</h3><p class="muted">Choose how your own rates compete with SigmaShip rates.</p><div class="form-field"><label>Default rate source</label><select onchange="saveCarrierPreference(this.value)"><option value="best">Show both · choose best price</option><option value="own">Prefer my carrier accounts</option><option value="sigma">Prefer SigmaShip rates</option></select></div></div><div class="card"><h3>How billing works</h3><p class="muted">Carrier transportation charges are billed according to your carrier agreement. SigmaShip separately charges the displayed platform/processing fee for labels created through your connected account.</p></div></div>`)}
 window.addCarrierAccount=()=>ssModal('Connect carrier account',`<div class="form-grid"><div class="form-field"><label>Carrier</label><select name="carrier" required><option>UPS</option><option>FedEx</option><option>Purolator</option><option>Canada Post</option><option>GLS</option><option>DHL Express</option></select></div>${ssField('Account nickname','nickname','text','','placeholder="My UPS account"')}${ssField('Carrier account number','account','text','','required')}<div class="form-field"><label>Connection method</label><select name="method"><option>API / OAuth credentials</option><option>Account number + credentials</option></select></div></div><div class="notice">For production, secrets will be encrypted and stored in a secure credential vault. They will never be exposed back to the browser after connection.</div>`,'Connect account',d=>{let s=ssLoad();s.carrierAccounts=s.carrierAccounts||[];s.carrierAccounts.push({id:'CA-'+Date.now(),carrier:d.carrier,nickname:d.nickname||d.carrier,accountLast4:d.account.slice(-4),method:d.method,status:'Pending verification',active:true});ssSave(s);ssToast(d.carrier+' account added for verification.');render()})
@@ -223,7 +418,7 @@ function checkout(){return `<section class="page"><div class="eyebrow">Create sh
 function tracking(){return shell('tracking',`<div class="eyebrow">Tracking / Purchased Labels</div><div class="toolbar"><div><h1>Tracking</h1><span class="muted">Every purchased label appears once, with its current shipment status.</span></div><button class="primary" data-route="quote">+ Ship</button></div><div class="kpis"><div class="kpi"><small>Labels / 30d</small><strong>128</strong></div><div class="kpi"><small>In transit</small><strong>19</strong></div><div class="kpi"><small>Delivered</small><strong>103</strong></div><div class="kpi"><small>Exceptions</small><strong>3</strong></div></div><div class="tracking-search"><label>Search Tracking</label><input id="tracking-search-input" placeholder="Search tracking number, service, recipient, address or status"></div><div class="tracking-table"><div class="tracking-row tracking-head"><span>Service Used / Tracking</span><span>Ship To</span><span>Date & Time Created</span><span>Charge</span><span>Status</span></div><button class="tracking-row" data-track-id="PRL-782901284" data-route="shipment-detail"><span><strong>Purolator Ground</strong><small>PRL-782901284</small></span><span><strong>Alex Morgan</strong><small>1280 Homer St, Suite 200<br>Vancouver, BC V6B 2Y5<br>Canada</small></span><span>Oct 07, 2026<small>8:14 AM</small></span><strong>$18.42 CAD</strong><span><b class="badge">In transit</b><small>Mississauga, ON · 9:22 AM</small></span></button><button class="tracking-row" data-track-id="1Z84A921039" data-route="shipment-detail"><span><strong>UPS Standard</strong><small>1Z84A921039</small></span><span><strong>Jamie Lee</strong><small>7250 Rue du Mile End<br>Montréal, QC H2R 3A4<br>Canada</small></span><span>Oct 06, 2026<small>4:32 PM</small></span><strong>$16.90 CAD</strong><span><b class="badge">Delivered</b><small>Oct 07 · 1:08 PM</small></span></button><button class="tracking-row" data-track-id="78410293401" data-route="shipment-detail"><span><strong>FedEx Ground</strong><small>78410293401</small></span><span><strong>Sam Rivera</strong><small>421 7 Ave SW, Unit 610<br>Calgary, AB T2P 4K9<br>Canada</small></span><span>Oct 06, 2026<small>11:05 AM</small></span><strong>$20.14 CAD</strong><span><b class="badge exception">Exception</b><small>Weather delay</small></span></button></div>`)}
 
 function auth(kind){return `<section class="page"><div class="eyebrow">SigmaShip account</div><h1>${kind==='login'?'Welcome back.':'Start shipping.'}</h1><div class="form-card" style="max-width:520px"><div class="form-field"><label>Email</label><input type="email"></div><div class="form-field" style="margin-top:15px"><label>Password</label><input type="password"></div>${kind==='login'?'<p><a href="#forgot">Forgot password?</a></p>':''}<button class="primary" style="margin-top:20px" onclick="location.hash='${kind==='login'?'quote':'onboarding'}'">${kind==='login'?'Log in':'Create account'} →</button></div></section>`}
-function render(){let r=location.hash.slice(1)||'home';const aliases={shipments:'tracking',billing:'accounting','store-settings':'integrations',support:'tickets',settings:'default-settings'};if(aliases[r]){location.hash=aliases[r];return}let routes={orders,products,integrations,'store-settings':storeSettings,'quick-quote':quickQuote,'saved-quotes':savedQuotes,addresses,packages,'carrier-accounts':carrierAccounts,'default-settings':defaultSettings,returns:returnsPage,pickups,team,settings,support,tickets,bulk,manifests,claims,reports,'store-detail':storeDetail,forgot,pricing,'order-detail':orderDetail,'shipment-detail':shipmentDetail,label:labelPage,invoices,transactions,notifications,profile,security,onboarding,admin,accounting},html=r.startsWith('admin-')?adminPage(r.slice(6)):r==='home'?home():r==='quote'?quote():r==='dashboard'?dashboard():r==='billing'?billing():r==='checkout'?checkout():r==='tracking'?tracking():r==='login'||r==='signup'?auth(r):routes[r]?routes[r]():simple(r,r[0].toUpperCase()+r.slice(1),'Manage your '+r+' in SigmaShip.');$('#app').innerHTML=html;if(r==='quote'){document.querySelectorAll('.address-card').forEach(card=>setRegions(card));document.querySelectorAll('.address-card input,.address-card select').forEach(el=>el.addEventListener('input',updateOverview));document.querySelectorAll('#package-card input,#package-card select,#customs-card input,#customs-card select').forEach(el=>el.addEventListener('input',refreshShipmentOverview));updateOverview();refreshShipmentOverview()}document.querySelectorAll('[data-route]').forEach(el=>el.onclick=()=>location.hash=el.dataset.route)}
+function render(){let r=(location.hash.slice(1)||'home').split('?')[0];const aliases={shipments:'tracking',billing:'accounting','store-settings':'integrations',support:'tickets',settings:'default-settings'};if(aliases[r]){location.hash=aliases[r];return}let routes={orders,products,integrations,'integration-setup':integrationSetup,'store-settings':storeSettings,'quick-quote':quickQuote,'saved-quotes':savedQuotes,addresses,packages,'carrier-accounts':carrierAccounts,'default-settings':defaultSettings,returns:returnsPage,pickups,team,settings,support,tickets,bulk,manifests,claims,reports,'store-detail':storeDetail,forgot,pricing,'order-detail':orderDetail,'shipment-detail':shipmentDetail,label:labelPage,invoices,transactions,notifications,profile,security,onboarding,admin,accounting},html=r.startsWith('admin-')?adminPage(r.slice(6)):r==='home'?home():r==='quote'?quote():r==='dashboard'?dashboard():r==='billing'?billing():r==='checkout'?checkout():r==='tracking'?tracking():r==='login'||r==='signup'?auth(r):routes[r]?routes[r]():simple(r,r[0].toUpperCase()+r.slice(1),'Manage your '+r+' in SigmaShip.');$('#app').innerHTML=html;if(r==='quote'){document.querySelectorAll('.address-card').forEach(card=>setRegions(card));document.querySelectorAll('.address-card input,.address-card select').forEach(el=>el.addEventListener('input',updateOverview));document.querySelectorAll('#package-card input,#package-card select,#customs-card input,#customs-card select').forEach(el=>el.addEventListener('input',refreshShipmentOverview));updateOverview();refreshShipmentOverview()}document.querySelectorAll('[data-route]').forEach(el=>el.onclick=()=>location.hash=el.dataset.route)}
 
 
 /* Universal front-end interaction layer */
@@ -299,6 +494,6 @@ const oldShowRates=window.showRates;
 window.showRates=()=>{oldShowRates();wireShipPurchase()}
 
 const oldRender=render;
-render=function(){oldRender();setTimeout(()=>{wirePageActions();enhanceQuote();enhanceAddresses();enhancePackages();enhanceProducts();enhancePickups();enhanceClaims();enhanceTickets();enhanceCarrierAccounts();wireIntegrations();wireShipPurchase()},0)}
+render=function(){oldRender();setTimeout(()=>{wirePageActions();wireIntegrationSetup();enhanceQuote();enhanceAddresses();enhancePackages();enhanceProducts();enhancePickups();enhanceClaims();enhanceTickets();enhanceCarrierAccounts();wireIntegrations();wireShipPurchase()},0)}
 
 addEventListener('hashchange',render);render();
