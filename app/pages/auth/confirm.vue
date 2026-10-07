@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
 definePageMeta({
   layout: false
 })
@@ -8,7 +9,7 @@ useHead({
 })
 
 const route = useRoute()
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 const errorMessage = ref('')
 
 onMounted(async () => {
@@ -19,14 +20,21 @@ onMounted(async () => {
     return
   }
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
     errorMessage.value = error.message
     return
   }
 
-  await navigateTo('/ship', { replace: true })
+  const { data: membership } = await supabase
+    .from('memberships')
+    .select('organization_id')
+    .eq('user_id', data.user?.id ?? '')
+    .limit(1)
+    .maybeSingle()
+
+  await navigateTo(membership?.organization_id ? '/ship' : '/onboarding', { replace: true })
 })
 </script>
 
