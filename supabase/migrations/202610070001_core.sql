@@ -268,9 +268,8 @@ create policy "integrations_admin_write" on public.integrations
   for all using (public.has_org_role(organization_id, array['owner','admin']::public.membership_role[]))
   with check (public.has_org_role(organization_id, array['owner','admin']::public.membership_role[]));
 
-create policy "orders_member_all" on public.orders
-  for all using (public.is_org_member(organization_id))
-  with check (public.is_org_member(organization_id));
+create policy "orders_member_read" on public.orders
+  for select using (public.is_org_member(organization_id));
 
 create policy "order_items_member_read" on public.order_items
   for select using (
@@ -281,9 +280,8 @@ create policy "order_items_member_read" on public.order_items
     )
   );
 
-create policy "shipments_member_all" on public.shipments
-  for all using (public.is_org_member(organization_id))
-  with check (public.is_org_member(organization_id));
+create policy "shipments_member_read" on public.shipments
+  for select using (public.is_org_member(organization_id));
 
 create policy "shipment_packages_member_read" on public.shipment_packages
   for select using (
@@ -331,3 +329,19 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
+
+
+-- Browser clients may read operational records, but authoritative order,
+-- shipment, tracking, audit and financial writes are server-only.
+revoke insert, update, delete on public.orders from anon, authenticated;
+revoke insert, update, delete on public.order_items from anon, authenticated;
+revoke insert, update, delete on public.shipments from anon, authenticated;
+revoke insert, update, delete on public.shipment_packages from anon, authenticated;
+revoke insert, update, delete on public.customs_items from anon, authenticated;
+revoke insert, update, delete on public.tracking_events from anon, authenticated;
+revoke insert, update, delete on public.audit_events from anon, authenticated;
+
+revoke all on function public.is_org_member(uuid) from public;
+revoke all on function public.has_org_role(uuid, public.membership_role[]) from public;
+grant execute on function public.is_org_member(uuid) to authenticated;
+grant execute on function public.has_org_role(uuid, public.membership_role[]) to authenticated;
