@@ -72,12 +72,27 @@ export class SandboxCarrierAdapter implements CarrierAdapter {
       .slice(-10)
       .toUpperCase()
 
+    const rates = await this.getRates({
+      organizationId: request.organizationId,
+      sender: request.sender,
+      recipient: request.recipient,
+      packages: request.packages,
+      currency: request.currency
+    })
+    const selectedRate = rates.find(
+      (rate) => rate.serviceCode === request.serviceCode
+    )
+
+    if (!selectedRate) {
+      throw new Error(`Unknown sandbox service "${request.serviceCode}".`)
+    }
+
     return {
       provider: this.key,
       trackingNumber: `SIG${suffix}`,
       trackingUrl: `/tracking/SIG${suffix}`,
       labelUrl: `/api/poc/labels/${request.shipmentId}`,
-      carrierCost: money(14.25, 'CAD'),
+      carrierCost: selectedRate.carrierCost,
       metadata: {
         serviceCode: request.serviceCode,
         idempotencyKey: request.idempotencyKey
