@@ -22,3 +22,18 @@
 @media(max-width:1250px){.ship-layout{grid-template-columns:minmax(0,1fr) 285px}.address-pair .form-grid{grid-template-columns:1fr}.address-pair .form-field.full{grid-column:auto}.address-pair .address-heading{align-items:flex-start;flex-wrap:wrap}.address-pair .address-heading .address-book-btn{margin-left:50px}}
 @media(max-width:900px){.address-pair{grid-template-columns:1fr}.swap-bridge{padding:0;align-self:center}.swap-bridge:before{left:-30vw;right:-30vw;top:50%;bottom:auto;width:auto;height:1px}.swap-bridge .swap-btn{transform:rotate(90deg)}.swap-bridge .swap-btn small{display:none}.address-pair .form-grid{grid-template-columns:1fr 1fr}.address-pair .form-field.full{grid-column:1/-1}}
 @media(max-width:560px){.address-pair .form-grid{grid-template-columns:1fr}.address-pair .form-field.full{grid-column:auto}.address-pair .address-options{grid-template-columns:1fr}}
+
+/* Address pair proportion correction */
+.address-pair{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:14px!important;position:relative}
+.address-pair>.form-card{width:100%;height:100%;box-sizing:border-box}
+.address-pair .form-grid{grid-template-columns:1fr 1fr!important}
+.address-pair .form-field.full{grid-column:1/-1!important}
+.swap-bridge{position:absolute!important;left:50%;top:78px;transform:translateX(-50%);padding:0!important;z-index:8}
+.swap-bridge:before{display:none!important}
+.swap-bridge .swap-btn{width:44px!important;height:44px!important;border-width:5px!important;box-shadow:0 0 0 1px var(--line)}
+.swap-bridge .swap-btn small{display:none!important}
+.address-pair .address-heading{min-height:54px}
+.address-pair .address-options{margin-top:auto}
+@media(max-width:1250px) and (min-width:901px){.address-pair .form-grid{grid-template-columns:1fr 1fr!important}.address-pair .form-field.full{grid-column:1/-1!important}.address-pair .address-heading{flex-wrap:nowrap}.address-pair .address-heading .address-book-btn{margin-left:auto}}
+@media(max-width:900px){.address-pair{grid-template-columns:1fr!important;gap:54px!important}.swap-bridge{top:50%;left:50%;transform:translate(-50%,-50%)}.swap-bridge .swap-btn{transform:rotate(90deg)}}
+@media(max-width:560px){.address-pair .form-grid{grid-template-columns:1fr!important}.address-pair .form-field.full{grid-column:auto!important}}
