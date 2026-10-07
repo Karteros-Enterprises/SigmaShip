@@ -20,14 +20,23 @@ function totalWeight(
   )
 }
 
-function money(
-  amount: number,
+function moneyFromCents(
+  amountInCents: number,
   currency: string
 ) {
   return {
-    amount: Number(amount.toFixed(2)),
+    amount: amountInCents / 100,
     currency
   }
+}
+
+function applyRateMultiplier(
+  amountInCents: number,
+  multiplierPercent: number
+) {
+  return Math.round(
+    amountInCents * multiplierPercent / 100
+  )
 }
 
 export class SandboxCarrierAdapter implements CarrierAdapter {
@@ -37,28 +46,36 @@ export class SandboxCarrierAdapter implements CarrierAdapter {
     request: RateRequest
   ): Promise<CarrierRate[]> {
     const weight = totalWeight(request)
-    const base = 9.75 + weight * 0.82
+    const baseInCents = Math.round(
+      975 + weight * 82
+    )
 
     return [
       {
         provider: this.key,
         serviceCode: 'ground',
         serviceName: 'Sandbox Ground',
-        carrierCost: money(base, request.currency),
+        carrierCost: moneyFromCents(baseInCents, request.currency),
         transitDays: 4
       },
       {
         provider: this.key,
         serviceCode: 'express',
         serviceName: 'Sandbox Express',
-        carrierCost: money(base * 1.7, request.currency),
+        carrierCost: moneyFromCents(
+          applyRateMultiplier(baseInCents, 170),
+          request.currency
+        ),
         transitDays: 2
       },
       {
         provider: this.key,
         serviceCode: 'priority',
         serviceName: 'Sandbox Priority',
-        carrierCost: money(base * 2.35, request.currency),
+        carrierCost: moneyFromCents(
+          applyRateMultiplier(baseInCents, 235),
+          request.currency
+        ),
         transitDays: 1
       }
     ]
