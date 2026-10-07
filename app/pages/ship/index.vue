@@ -1,0 +1,453 @@
+<script setup lang="ts">
+import type { CanonicalAddress, Package } from '#shared/types/domain'
+
+definePageMeta({
+  layout: 'portal',
+  middleware: ['auth']
+})
+
+useHead({ title: 'Ship' })
+
+interface QuoteOption {
+  id: string
+  provider: string
+  serviceCode: string
+  serviceName: string
+  customerPrice: number
+  currency: string
+  transitDays: number | null
+  estimatedDelivery: string | null
+  expiresAt: string
+}
+
+interface PurchasedShipment {
+  id: string
+  carrier: string
+  service: string
+  trackingNumber: string
+  trackingUrl?: string
+  labelUrl: string
+  customerCharge: number
+  currency: string
+}
+
+const countryOptions = [
+  { label: 'Canada', value: 'CA' },
+  { label: 'United States', value: 'US' }
+]
+
+const sender = reactive<CanonicalAddress>({
+  contactName: '',
+  company: '',
+  address1: '',
+  address2: '',
+  city: '',
+  region: '',
+  postalCode: '',
+  countryCode: 'CA',
+  phone: '',
+  email: '',
+  residential: false
+})
+
+const recipient = reactive<CanonicalAddress>({
+  contactName: '',
+  company: '',
+  address1: '',
+  address2: '',
+  city: '',
+  region: '',
+  postalCode: '',
+  countryCode: 'CA',
+  phone: '',
+  email: '',
+  residential: false
+})
+
+const parcel = reactive<Package>({
+  weight: 1,
+  weightUnit: 'lb',
+  length: 10,
+  width: 8,
+  height: 4,
+  dimensionUnit: 'in'
+})
+
+const quotes = ref<QuoteOption[]>([])
+const selectedQuoteId = ref('')
+const purchasedShipment = ref<PurchasedShipment | null>(null)
+const quoting = ref(false)
+const purchasing = ref(false)
+const errorMessage = ref('')
+
+interface FetchErrorData {
+  statusMessage?: string
+  message?: string
+}
+
+function getRequestErrorMessage(error: unknown, fallback: string) {
+  if (typeof error !== 'object' || error === null || !('data' in error)) {
+    return fallback
+  }
+
+  const data = (error as { data?: FetchErrorData }).data
+
+  return data?.statusMessage || data?.message || fallback
+}
+
+const selectedQuote = computed(() =>
+  quotes.value.find((quote) => quote.id === selectedQuoteId.value)
+)
+
+const isInternational = computed(
+  () => sender.countryCode !== recipient.countryCode
+)
+
+function shipmentPayload() {
+  return {
+    sender: { ...sender },
+    recipient: { ...recipient },
+    packages: [{ ...parcel }],
+    currency: 'CAD'
+  }
+}
+
+async function compareRates() {
+  errorMessage.value = ''
+  purchasedShipment.value = null
+  selectedQuoteId.value = ''
+  quoting.value = true
+
+  try {
+    const response = await $fetch<{ quotes: QuoteOption[] }>('/api/shipping/quotes', {
+      method: 'POST',
+      body: shipmentPayload()
+    })
+
+    quotes.value = response.quotes
+  } catch (error: unknown) {
+    errorMessage.value = getRequestErrorMessage(
+      error,
+      'Unable to compare rates.'
+    )
+  } finally {
+    quoting.value = false
+  }
+}
+
+async function buyLabel() {
+  if (!selectedQuote.value) {
+    return
+  }
+
+  errorMessage.value = ''
+  purchasing.value = true
+
+  try {
+    const response = await $fetch<{ shipment: PurchasedShipment }>(
+      '/api/shipping/shipments',
+      {
+        method: 'POST',
+        body: {
+          ...shipmentPayload(),
+          quoteId: selectedQuote.value.id
+        }
+      }
+    )
+
+    purchasedShipment.value = response.shipment
+  } catch (error: unknown) {
+    errorMessage.value = getRequestErrorMessage(
+      error,
+      'Unable to create shipment.'
+    )
+  } finally {
+    purchasing.value = false
+  }
+}
+
+function swapAddresses() {
+  const senderCopy = { ...sender }
+  Object.assign(sender, recipient)
+  Object.assign(recipient, senderCopy)
+  quotes.value = []
+  selectedQuoteId.value = ''
+}
+
+function money(amount: number, currency: string) {
+  return new Intl.NumberFormat('en-CA', {
+    style: 'currency',
+    currency
+  }).format(amount)
+}
+</script>
+
+<template>
+  <div class="page-stack">
+    <AppPageHeader
+      eyebrow="Shipping"
+      title="Create shipment"
+      description="Enter the shipment once. SigmaShip compares eligible services, locks the selected rate and creates the label."
+    />
+
+    <UAlert
+      v-if="errorMessage"
+      color="error"
+      variant="subtle"
+      icon="i-lucide-circle-alert"
+      :description="errorMessage"
+    />
+
+    <div class="shipment-layout">
+      <form class="shipment-form-stack" @submit.prevent="compareRates">
+        <UCard>
+          <template #header>
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">01 / FROM</p>
+                <h2>Sender</h2>
+              </div>
+              <UBadge color="neutral" variant="subtle">Required</UBadge>
+            </div>
+          </template>
+
+          <div class="placeholder-grid">
+            <UFormField label="Contact name">
+              <UInput v-model="sender.contactName" class="w-full" required />
+            </UFormField>
+            <UFormField label="Company">
+              <UInput v-model="sender.company" class="w-full" />
+            </UFormField>
+            <UFormField label="Street address" class="span-2">
+              <UInput v-model="sender.address1" class="w-full" required />
+            </UFormField>
+            <UFormField label="City">
+              <UInput v-model="sender.city" class="w-full" required />
+            </UFormField>
+            <UFormField label="Province / State">
+              <UInput v-model="sender.region" class="w-full" required placeholder="ON" />
+            </UFormField>
+            <UFormField label="Postal / ZIP">
+              <UInput v-model="sender.postalCode" class="w-full" required />
+            </UFormField>
+            <UFormField label="Country">
+              <USelect
+                v-model="sender.countryCode"
+                class="w-full"
+                :items="countryOptions"
+                required
+              />
+            </UFormField>
+          </div>
+        </UCard>
+
+        <UCard>
+          <template #header>
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">02 / TO</p>
+                <h2>Recipient</h2>
+              </div>
+              <UButton
+                type="button"
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-arrow-up-down"
+                @click="swapAddresses"
+              >
+                Swap
+              </UButton>
+            </div>
+          </template>
+
+          <div class="placeholder-grid">
+            <UFormField label="Contact name">
+              <UInput v-model="recipient.contactName" class="w-full" required />
+            </UFormField>
+            <UFormField label="Company">
+              <UInput v-model="recipient.company" class="w-full" />
+            </UFormField>
+            <UFormField label="Street address" class="span-2">
+              <UInput v-model="recipient.address1" class="w-full" required />
+            </UFormField>
+            <UFormField label="City">
+              <UInput v-model="recipient.city" class="w-full" required />
+            </UFormField>
+            <UFormField label="Province / State">
+              <UInput v-model="recipient.region" class="w-full" required placeholder="ON" />
+            </UFormField>
+            <UFormField label="Postal / ZIP">
+              <UInput v-model="recipient.postalCode" class="w-full" required />
+            </UFormField>
+            <UFormField label="Country">
+              <USelect
+                v-model="recipient.countryCode"
+                class="w-full"
+                :items="countryOptions"
+                required
+              />
+            </UFormField>
+          </div>
+
+          <UAlert
+            v-if="isInternational"
+            class="shipping-notice"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-globe-2"
+            title="Cross-border shipment"
+            description="Sandbox rating is available. Production carrier purchase will require customs details before launch."
+          />
+        </UCard>
+
+        <UCard>
+          <template #header>
+            <div class="card-heading">
+              <div>
+                <p class="eyebrow">03 / PACKAGE</p>
+                <h2>Parcel</h2>
+              </div>
+              <span class="package-summary">
+                {{ parcel.weight }} {{ parcel.weightUnit }} ·
+                {{ parcel.length }} × {{ parcel.width }} × {{ parcel.height }} {{ parcel.dimensionUnit }}
+              </span>
+            </div>
+          </template>
+
+          <div class="package-grid">
+            <UFormField label="Weight">
+              <UInput v-model.number="parcel.weight" type="number" min="0.01" step="0.01" required />
+            </UFormField>
+            <UFormField label="Unit">
+              <USelect v-model="parcel.weightUnit" :items="['lb', 'kg']" />
+            </UFormField>
+            <UFormField label="Length">
+              <UInput v-model.number="parcel.length" type="number" min="0.01" step="0.01" required />
+            </UFormField>
+            <UFormField label="Width">
+              <UInput v-model.number="parcel.width" type="number" min="0.01" step="0.01" required />
+            </UFormField>
+            <UFormField label="Height">
+              <UInput v-model.number="parcel.height" type="number" min="0.01" step="0.01" required />
+            </UFormField>
+            <UFormField label="Dimensions">
+              <USelect v-model="parcel.dimensionUnit" :items="['in', 'cm']" />
+            </UFormField>
+          </div>
+
+          <template #footer>
+            <UButton
+              type="submit"
+              size="xl"
+              block
+              icon="i-lucide-git-compare-arrows"
+              :loading="quoting"
+            >
+              Compare rates
+            </UButton>
+          </template>
+        </UCard>
+
+        <section v-if="quotes.length" class="rate-section">
+          <div class="rate-heading">
+            <div>
+              <p class="eyebrow">04 / COMPARE</p>
+              <h2>Choose a service</h2>
+            </div>
+            <span>{{ quotes.length }} live sandbox rates</span>
+          </div>
+
+          <button
+            v-for="quote in quotes"
+            :key="quote.id"
+            type="button"
+            class="rate-card"
+            :class="{ selected: selectedQuoteId === quote.id }"
+            @click="selectedQuoteId = quote.id"
+          >
+            <span class="rate-radio" />
+            <span class="rate-service">
+              <strong>{{ quote.serviceName }}</strong>
+              <small>
+                {{ quote.transitDays ? `${quote.transitDays} business day${quote.transitDays === 1 ? '' : 's'}` : 'Transit calculated by carrier' }}
+              </small>
+            </span>
+            <span class="rate-price">
+              <strong>{{ money(quote.customerPrice, quote.currency) }}</strong>
+              <small>{{ quote.currency }}</small>
+            </span>
+          </button>
+
+          <UButton
+            v-if="selectedQuote"
+            size="xl"
+            block
+            trailing-icon="i-lucide-arrow-right"
+            :loading="purchasing"
+            @click="buyLabel"
+          >
+            Create shipment · {{ money(selectedQuote.customerPrice, selectedQuote.currency) }}
+          </UButton>
+        </section>
+
+        <UCard v-if="purchasedShipment" class="shipment-success">
+          <div class="success-mark">
+            <UIcon name="i-lucide-check" />
+          </div>
+          <div>
+            <p class="eyebrow">LABEL CREATED</p>
+            <h2>{{ purchasedShipment.trackingNumber }}</h2>
+            <p>{{ purchasedShipment.service }} · {{ money(purchasedShipment.customerCharge, purchasedShipment.currency) }}</p>
+          </div>
+          <UButton
+            :to="purchasedShipment.labelUrl"
+            target="_blank"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-printer"
+          >
+            Open label
+          </UButton>
+        </UCard>
+      </form>
+
+      <aside class="shipment-overview">
+        <UCard>
+          <template #header>
+            <div>
+              <p class="eyebrow">Shipment overview</p>
+              <h2>One shipment. One flow.</h2>
+            </div>
+          </template>
+
+          <div class="overview-steps">
+            <div class="overview-step active">
+              <span>1</span>
+              <div><strong>From</strong><p>{{ sender.city || 'Origin address' }}</p></div>
+            </div>
+            <div class="overview-step active">
+              <span>2</span>
+              <div><strong>To</strong><p>{{ recipient.city || 'Destination address' }}</p></div>
+            </div>
+            <div class="overview-step active">
+              <span>3</span>
+              <div><strong>Package</strong><p>{{ parcel.weight }} {{ parcel.weightUnit }}</p></div>
+            </div>
+            <div class="overview-step" :class="{ active: quotes.length }">
+              <span>4</span>
+              <div><strong>Rates</strong><p>{{ quotes.length ? `${quotes.length} services found` : 'Compare carriers' }}</p></div>
+            </div>
+            <div class="overview-step" :class="{ active: selectedQuote }">
+              <span>5</span>
+              <div><strong>Purchase</strong><p>{{ selectedQuote?.serviceName || 'Select a service' }}</p></div>
+            </div>
+            <div class="overview-step" :class="{ active: purchasedShipment }">
+              <span>6</span>
+              <div><strong>Label</strong><p>{{ purchasedShipment?.trackingNumber || 'Print and track' }}</p></div>
+            </div>
+          </div>
+        </UCard>
+      </aside>
+    </div>
+  </div>
+</template>
