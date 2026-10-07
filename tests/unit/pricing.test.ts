@@ -26,7 +26,7 @@ describe('priceCarrierRate', () => {
       markupAmount: 3.53,
       customerPrice: 27.08
     })
-    expect(priced.customerPrice).toBe(23.55 + priced.markupAmount)
+    expect(Math.round(priced.customerPrice * 100)).toBe(\n      Math.round((23.55 + priced.markupAmount) * 100)\n    )
   })
 
   it('never mutates the carrier cost supplied by the adapter', () => {
