@@ -1409,3 +1409,24 @@ body,
   font-weight: 800;
   box-shadow: none;
 }
+
+
+/* Keep authentication fields visually stable during autofill and submission. */
+.auth-form input:disabled,
+.auth-form input[disabled],
+.auth-form input:read-only {
+  opacity: 1 !important;
+  background: #ffffff !important;
+  color: #0b0c0d !important;
+  -webkit-text-fill-color: #0b0c0d !important;
+}
+
+.auth-form input:-webkit-autofill,
+.auth-form input:-webkit-autofill:hover,
+.auth-form input:-webkit-autofill:focus,
+.auth-form input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0b0c0d !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #0b0c0d;
+}
