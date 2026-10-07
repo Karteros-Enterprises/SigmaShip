@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
   --sigma-ink: #111111;
@@ -1113,5 +1114,250 @@ body {
 
   .shipment-success a {
     grid-column: 1 / -1;
+  }
+}
+
+
+/* GitHub Pages visual parity — portal */
+.portal-shell {
+  grid-template-columns: 230px minmax(0, 1fr);
+  background: var(--sigma-canvas);
+}
+
+.portal-sidebar {
+  padding: 28px 18px;
+  background: #0b0c0f;
+}
+
+.portal-brand {
+  padding: 0 0 30px;
+  font-family: Manrope, Arial, sans-serif;
+  font-size: 20px;
+}
+
+.portal-brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #0b0c0f;
+  color: #c8ff32;
+  box-shadow: inset 0 0 0 1px #292c33;
+  font-size: 21px;
+}
+
+.portal-nav-group > p {
+  margin: 0 3px 8px;
+  color: #77766f;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+}
+
+.portal-nav-link {
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: #92969f;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.portal-nav-link:hover,
+.portal-nav-link.is-active {
+  background: #202228;
+  color: #fff;
+}
+
+.portal-nav-link.is-active {
+  box-shadow: none;
+}
+
+.portal-main {
+  background: #f4f2ec;
+}
+
+.portal-topbar {
+  height: 76px;
+  padding: 0 28px;
+  border-color: #d8d5cc;
+  background: rgba(244, 242, 236, .92);
+}
+
+.portal-command-hint {
+  min-width: 360px;
+  border-color: #d8d5cc;
+  border-radius: 10px;
+  background: #fff;
+  color: #77766f;
+}
+
+.portal-workspace {
+  width: min(1480px, 100%);
+  padding: 42px;
+}
+
+body,
+.portal-shell {
+  font-family: Manrope, Arial, sans-serif;
+}
+
+.page-stack {
+  gap: 30px;
+}
+
+.page-header h1 {
+  margin: 5px 0 8px;
+  font-size: clamp(42px, 4.5vw, 64px);
+  line-height: .95;
+  letter-spacing: -.055em;
+}
+
+.eyebrow {
+  color: #77766f;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+}
+
+.page-description {
+  color: #77766f;
+  font-size: 15px;
+}
+
+.shipment-layout {
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+}
+
+.shipment-form-stack {
+  gap: 18px;
+}
+
+/* Nuxt UI cards should look like the original white form cards. */
+.shipment-form-stack > div,
+.shipment-overview > div {
+  border: 1px solid #d8d5cc;
+  border-radius: 18px;
+  background: #fff;
+  color: #0b0c0f;
+  box-shadow: none;
+}
+
+.card-heading h2,
+.shipment-overview h2 {
+  margin: 4px 0 0;
+  color: #0b0c0f;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+}
+
+.placeholder-grid {
+  gap: 16px;
+}
+
+/* Restore the GitHub Pages light field treatment instead of navy inputs. */
+.shipment-form-stack input,
+.shipment-form-stack button[role="combobox"],
+.shipment-form-stack select {
+  border-color: #d8d5cc !important;
+  background: #faf9f5 !important;
+  color: #0b0c0f !important;
+}
+
+.shipment-form-stack input::placeholder {
+  color: #92918b !important;
+}
+
+.shipment-form-stack label {
+  color: #0b0c0f !important;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.package-summary {
+  color: #77766f;
+}
+
+.shipment-overview {
+  top: 98px;
+}
+
+.shipment-overview > div {
+  background: #0b0c0f;
+  color: #fff;
+  border-color: #292c33;
+}
+
+.shipment-overview h2 {
+  color: #fff;
+  font-size: 24px;
+}
+
+.shipment-overview .eyebrow {
+  color: #92969f;
+}
+
+.overview-step {
+  border-color: #292c33;
+}
+
+.overview-step > span {
+  border-color: #3a3e47;
+  color: #92969f;
+}
+
+.overview-step.active > span {
+  border-color: #c8ff32;
+  background: #c8ff32;
+  color: #0b0c0f;
+}
+
+.overview-step strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.overview-step p {
+  color: #92969f;
+}
+
+.rate-section {
+  border-radius: 18px;
+  background: #0b0c0f;
+}
+
+.rate-card {
+  border-color: #292c33;
+  background: #191b20;
+}
+
+.rate-card.selected {
+  border-color: #c8ff32;
+  background: #20231a;
+}
+
+.rate-card.selected .rate-radio {
+  border-color: #c8ff32;
+  background: #c8ff32;
+}
+
+.shipment-success {
+  background: #fff !important;
+}
+
+.success-mark {
+  background: #c8ff32;
+}
+
+@media (max-width: 960px) {
+  .portal-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-workspace {
+    padding: 30px 20px;
   }
 }
