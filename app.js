@@ -140,7 +140,25 @@ function wirePageActions(){
  wireFilters();wireGenericButtons();
 }
 function wireFilters(){document.querySelectorAll('.filterbar input,.filterbar select').forEach(el=>el.addEventListener('input',()=>{let bar=el.closest('.filterbar'),q=(bar.querySelector('input')?.value||'').toLowerCase(),sels=[...bar.querySelectorAll('select')].map(x=>x.value.toLowerCase());let rows=document.querySelectorAll('.tracking-row:not(.tracking-head),.table .row:not(.head)');rows.forEach(row=>{let txt=row.textContent.toLowerCase(),ok=!q||txt.includes(q);sels.forEach(s=>{if(!s.startsWith('all ')&&!txt.includes(s))ok=false});row.style.display=ok?'':'none'})}))}
+
+function saveQuickQuote(){let ins=[...document.querySelectorAll('.quick-quote-layout input')],sels=[...document.querySelectorAll('.quick-quote-layout select')];if(ins.length<5||!ins[0].value||!ins[1].value){ssToast('Enter origin and destination postal / ZIP codes.','error');return}let s=ssLoad();s.quotes.push({id:'SQ-'+String(2085+s.quotes.length),from:ins[0].value,to:ins[1].value,weight:ins[2]?.value||'',length:ins[3]?.value||'',width:ins[4]?.value||'',height:ins[5]?.value||'',package:sels[0]?.value||'Box',created:new Date().toISOString()});ssSave(s);ssToast('Quote saved.')}
+function enhanceQuote(){
+ let save=[...document.querySelectorAll('.quick-quote-layout button')].find(b=>b.textContent.includes('Save quote'));if(save)save.onclick=saveQuickQuote;
+}
+function enhanceAddresses(){if(location.hash!=='#addresses')return;let s=ssLoad();if(!s.addresses.length)return;let wrap=document.querySelector('.list-cards');s.addresses.forEach((a,i)=>{let d=document.createElement('div');d.className='card list-card';d.innerHTML=`<div><h3>${a.company||a.name}</h3><p class="muted">${a.address} · ${a.city}, ${a.region} ${a.postal}</p></div><strong>Saved</strong><button class="ghost">Delete</button>`;d.querySelector('button').onclick=()=>ssConfirm('Delete this address?',()=>{let n=ssLoad();n.addresses.splice(i,1);ssSave(n);render()});wrap?.appendChild(d)})}
+function enhancePackages(){if(location.hash!=='#packages')return;let s=ssLoad();if(!s.packages.length)return;let wrap=document.querySelector('.list-cards');s.packages.forEach((p,i)=>{let d=document.createElement('div');d.className='card list-card';d.innerHTML=`<div><h3>${p.name}</h3><p class="muted">${p.length} × ${p.width} × ${p.height} · ${p.weight} · ${p.units}</p></div><strong>Custom</strong><button class="ghost">Delete</button>`;d.querySelector('button').onclick=()=>ssConfirm('Delete this package preset?',()=>{let n=ssLoad();n.packages.splice(i,1);ssSave(n);render()});wrap?.appendChild(d)})}
+function enhanceProducts(){if(location.hash!=='#products')return;let s=ssLoad();let table=document.querySelector('.table');s.products.forEach(p=>{let d=document.createElement('div');d.className='row';d.innerHTML=`<strong>${p.name}</strong><span>${p.sku}</span><span>${p.weight} lb</span><span>${p.hs||'—'}</span><span>${p.origin||'—'}</span>`;table?.appendChild(d)})}
+function enhancePickups(){if(location.hash!=='#pickups')return;let s=ssLoad();let wrap=document.querySelector('.list-cards');s.pickups.forEach(p=>{let d=document.createElement('div');d.className='card list-card';d.innerHTML=`<div><h3>${p.date} · ${p.ready}–${p.close}</h3><p class="muted">${p.carrier} · ${p.address}</p></div><strong>${p.parcels} parcels</strong><button class="ghost">Cancel</button>`;d.querySelector('button').onclick=()=>ssToast('Pickup cancelled in demo state.');wrap?.appendChild(d)})}
+function enhanceClaims(){if(location.hash!=='#claims')return;let s=ssLoad();let wrap=document.querySelector('.list-cards');s.claims.forEach(x=>{let d=document.createElement('div');d.className='card list-card';d.innerHTML=`<div><h3>${x.shipment}</h3><p class="muted">${x.type} · ${x.amount}</p></div><strong>${x.status}</strong><button class="ghost">View</button>`;wrap?.appendChild(d)})}
+function enhanceTickets(){if(location.hash!=='#tickets')return;let s=ssLoad(),table=document.querySelector('.table');s.tickets.forEach((x,i)=>{let d=document.createElement('div');d.className='row';d.innerHTML=`<strong>#T-${1100+i}</strong><span>${x.subject}</span><span>Just now</span><span class="badge">${x.status}</span><button class="small-btn">View</button>`;d.querySelector('button').onclick=()=>ssModal(x.subject,`<div class="notice">${x.message}</div><div class="form-field"><label>Reply</label><textarea name="reply" required></textarea></div>`,'Send reply',()=>ssToast('Reply added to ticket.'));table?.appendChild(d)})}
+function wireShipPurchase(){
+ if(location.hash!=='#quote')return;
+ document.querySelectorAll('#ratebox button').forEach(b=>{if(b.textContent.toLowerCase().includes('select')||b.textContent.toLowerCase().includes('ship'))b.onclick=()=>location.hash='checkout'});
+}
+const oldShowRates=window.showRates;
+window.showRates=()=>{oldShowRates();wireShipPurchase()}
+
 const oldRender=render;
-render=function(){oldRender();setTimeout(wirePageActions,0)}
+render=function(){oldRender();setTimeout(()=>{wirePageActions();enhanceQuote();enhanceAddresses();enhancePackages();enhanceProducts();enhancePickups();enhanceClaims();enhanceTickets();wireShipPurchase()},0)}
 
 addEventListener('hashchange',render);render();
