@@ -5,3 +5,7 @@
 
 .bars{display:grid;gap:14px;margin-top:28px}.bars i{display:block;height:18px;background:var(--ink);border-radius:4px}.metric{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:12px 0}.adminbar button{cursor:pointer}
 @media print{.topbar,.sidebar,.adminbar,footer,.toolbar button{display:none!important}.shell,.admin-shell{display:block}.workspace{padding:0}.label-demo{margin:0;border:2px solid #000}}
+
+.shipment-page{max-width:1180px}.shipment-sections{display:grid;gap:18px;margin-top:35px}.shipment-sections .form-card{max-width:none;margin-top:0}.section-title{display:flex;gap:16px;align-items:flex-start;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--line)}.section-title>span{font:500 11px "DM Mono";display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--acid)}.section-title h3,.section-title p{margin:0}.section-title h3{font-size:22px}.package-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.package-contents{grid-column:span 2}.input-unit{display:grid;grid-template-columns:1fr 72px}.input-unit input{border-radius:9px 0 0 9px}.input-unit select{border-left:0;border-radius:0 9px 9px 0;background:#eeece5}.shipment-cta{margin-top:26px;padding:15px 22px}
+@media(max-width:800px){.package-grid{grid-template-columns:1fr 1fr}.package-contents{grid-column:1/-1}}
+@media(max-width:520px){.package-grid{grid-template-columns:1fr}.package-contents{grid-column:auto}}
