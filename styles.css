@@ -89,3 +89,15 @@ body:has(.portal-shell)>.topbar,body:has(.portal-shell)>footer{display:none}
 
 /* Integrations — retain original Store Settings card language */
 .integration-block{margin-top:24px}.integrations-store-grid{margin-top:12px}.integration-store-card{transition:.18s ease}.integration-store-card:hover{transform:translateY(-1px);border-color:#aaa79d}.integration-store-card.connected{box-shadow:inset 3px 0 0 var(--acid)}.integration-store-card.connected .integration-state{color:#277a4d}.integration-settings{margin-top:26px}
+
+/* Global select UX — consistent inset chevron and safe text spacing */
+select{
+  -webkit-appearance:none;
+  appearance:none;
+  padding-right:44px !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%236b6b66' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 16px center;
+  background-size:12px 8px;
+}
+select:focus{background-position:right 16px center}
