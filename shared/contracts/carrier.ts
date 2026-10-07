@@ -1,19 +1,5 @@
-import type { Money, Package } from '~/types/domain'
+import type { CanonicalAddress, Money, Package } from '#shared/types/domain'
 import type { PickupAdapter } from '#shared/contracts/pickup'
-
-export interface CanonicalAddress {
-  contactName: string
-  company?: string
-  address1: string
-  address2?: string
-  city: string
-  region: string
-  postalCode: string
-  countryCode: string
-  phone?: string
-  email?: string
-  residential?: boolean
-}
 
 export interface RateRequest {
   organizationId: string
