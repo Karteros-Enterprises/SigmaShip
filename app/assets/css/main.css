@@ -1361,3 +1361,51 @@ body,
     padding: 30px 20px;
   }
 }
+
+
+/* Authentication field normalization */
+.auth-form [data-slot="root"] {
+  width: 100%;
+}
+
+.auth-form input {
+  width: 100% !important;
+  min-height: 52px !important;
+  box-sizing: border-box;
+  padding: 0 16px !important;
+  border: 1px solid #d8d5cc !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #0b0c0d !important;
+  font: inherit !important;
+  font-size: 14px !important;
+  box-shadow: none !important;
+}
+
+.auth-form input::placeholder {
+  color: #92918b !important;
+}
+
+.auth-form input:focus {
+  border-color: #0b0c0d !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.45) !important;
+}
+
+.auth-form label {
+  color: #161719 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.auth-form button[type="submit"] {
+  width: 100%;
+  min-height: 52px;
+  justify-content: center;
+  border-radius: 10px;
+  background: #d8ff3e;
+  color: #0b0c0d;
+  font-size: 14px;
+  font-weight: 800;
+  box-shadow: none;
+}
