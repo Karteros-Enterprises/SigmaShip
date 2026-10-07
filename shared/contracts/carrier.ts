@@ -26,6 +26,7 @@ export interface LabelPurchaseRequest {
   sender: CanonicalAddress
   recipient: CanonicalAddress
   packages: Package[]
+  currency: string
   idempotencyKey: string
 }
 
