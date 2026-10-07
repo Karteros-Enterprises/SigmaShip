@@ -78,7 +78,9 @@ export interface Database {
           raw_rate?: Json | null
           created_at?: string
         }
-        Update: Record<string, never>
+        Update: {
+          shipment_id?: string | null
+        }
         Relationships: []
       }
       shipments: {
