@@ -1,5 +1,8 @@
 <script setup lang="ts">
-definePageMeta({ layout: 'portal' })
+definePageMeta({
+  layout: 'portal',
+  middleware: ['auth', 'onboarded']
+})
 
 useHead({ title: 'Ship' })
 
