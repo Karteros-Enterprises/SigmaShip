@@ -22,15 +22,16 @@ create table public.rate_quotes (
   provider text not null,
   service_code text not null,
   service_name text not null,
-  carrier_cost numeric(12,2) not null,
-  customer_price numeric(12,2) not null,
-  markup_amount numeric(12,2) not null default 0,
+  carrier_cost numeric(12,2) not null check (carrier_cost >= 0),
+  customer_price numeric(12,2) not null check (customer_price >= 0),
+  markup_amount numeric(12,2) not null default 0 check (markup_amount >= 0),
   currency char(3) not null default 'CAD',
   transit_days integer,
   estimated_delivery timestamptz,
   expires_at timestamptz not null,
   raw_rate jsonb,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  constraint rate_quotes_expiry_check check (expires_at > created_at)
 );
 
 create table public.pickups (
@@ -46,7 +47,12 @@ create table public.pickups (
   cancelled_at timestamptz,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
-  unique (provider, confirmation_number)
+  unique (organization_id, provider, confirmation_number),
+  constraint pickups_window_check check (window_end > window_start),
+  constraint pickups_cancellation_check check (
+    (status = 'cancelled') = (cancelled_at is not null)
+    and (cancelled_at is null or cancelled_at >= created_at)
+  )
 );
 
 create table public.pickup_shipments (
@@ -58,13 +64,25 @@ create table public.pickup_shipments (
 alter table public.shipments
   add column cancelled_at timestamptz,
   add column cancellation_reason text,
-  add column void_reference text;
+  add column void_reference text,
+  add constraint shipments_cancellation_check check (
+    (status = 'cancelled') = (cancelled_at is not null)
+    and (cancelled_at is null or cancelled_at >= created_at)
+    and (status = 'cancelled' or (cancellation_reason is null and void_reference is null))
+  );
 
 create index rate_quotes_org_created_idx
   on public.rate_quotes(organization_id, created_at desc);
 
 create index pickups_org_created_idx
   on public.pickups(organization_id, created_at desc);
+
+-- Organization FK lookups are covered by the composite indexes above;
+-- pickup_id and onboarding user_id are covered by their primary keys.
+create index onboarding_states_org_idx on public.onboarding_states(organization_id);
+create index rate_quotes_shipment_idx on public.rate_quotes(shipment_id);
+create index pickups_created_by_idx on public.pickups(created_by);
+create index pickup_shipments_shipment_idx on public.pickup_shipments(shipment_id);
 
 alter table public.onboarding_states enable row level security;
 alter table public.rate_quotes enable row level security;
@@ -75,12 +93,6 @@ create policy "onboarding_read_self"
   on public.onboarding_states
   for select
   using (user_id = auth.uid());
-
-create policy "onboarding_update_self"
-  on public.onboarding_states
-  for update
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
 
 create policy "rate_quotes_member_read"
   on public.rate_quotes
@@ -105,14 +117,15 @@ create policy "pickup_shipments_member_read"
   );
 
 
--- Rates and pickups are authoritative carrier operations. Browser clients
+-- Onboarding, rates and pickups are authoritative server operations. Browser clients
 -- can read their organization's records; Nitro server routes perform writes.
-revoke insert, update, delete on public.rate_quotes from anon, authenticated;
-revoke insert, update, delete on public.pickups from anon, authenticated;
-revoke insert, update, delete on public.pickup_shipments from anon, authenticated;
+revoke insert, update, delete on public.onboarding_states from public, anon, authenticated;
+revoke insert, update, delete on public.rate_quotes from public, anon, authenticated;
+revoke insert, update, delete on public.pickups from public, anon, authenticated;
+revoke insert, update, delete on public.pickup_shipments from public, anon, authenticated;
 
--- Onboarding is the one authenticated client mutation that must create an
--- organization and its owner membership atomically.
+-- This authenticated RPC creates an organization, owner membership and
+-- completed onboarding state atomically; clients cannot write the tables.
 create or replace function public.create_organization(
   organization_name text,
   organization_slug text
@@ -124,25 +137,34 @@ set search_path = ''
 as $$
 declare
   new_organization_id uuid;
-  normalized_name text := btrim(organization_name);
+  requesting_user_id uuid := auth.uid();
+  normalized_name text := btrim(regexp_replace(organization_name, '[[:space:]]+', ' ', 'g'));
   normalized_slug text := lower(btrim(organization_slug));
 begin
-  if auth.uid() is null then
+  if requesting_user_id is null then
     raise exception 'Authentication required';
   end if;
 
-  if char_length(normalized_name) < 2 then
-    raise exception 'Organization name is required';
+  if normalized_name is null or char_length(normalized_name) not between 2 and 100 then
+    raise exception 'Organization name must contain 2 to 100 characters';
   end if;
 
-  if normalized_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$' then
+  if normalized_slug is null or char_length(normalized_slug) not between 2 and 63
+    or normalized_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$' then
     raise exception 'Organization slug is invalid';
+  end if;
+
+  -- Serialize onboarding for this user. A row lock prevents two concurrent
+  -- RPC calls from both passing the membership check.
+  perform 1 from auth.users where id = requesting_user_id for update;
+  if not found then
+    raise exception 'Authenticated user does not exist';
   end if;
 
   if exists (
     select 1
     from public.memberships
-    where user_id = auth.uid()
+    where user_id = requesting_user_id
   ) then
     raise exception 'User already belongs to an organization';
   end if;
@@ -152,7 +174,7 @@ begin
   returning id into new_organization_id;
 
   insert into public.memberships (organization_id, user_id, role)
-  values (new_organization_id, auth.uid(), 'owner');
+  values (new_organization_id, requesting_user_id, 'owner');
 
   insert into public.onboarding_states (
     user_id,
@@ -162,7 +184,7 @@ begin
     completed_at
   )
   values (
-    auth.uid(),
+    requesting_user_id,
     new_organization_id,
     true,
     'complete',
@@ -179,5 +201,5 @@ begin
 end;
 $$;
 
-revoke all on function public.create_organization(text, text) from public;
+revoke all on function public.create_organization(text, text) from public, anon, authenticated, service_role;
 grant execute on function public.create_organization(text, text) to authenticated;
