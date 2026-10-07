@@ -2,7 +2,28 @@
 import { portalNavigation } from '~/config/navigation'
 
 const route = useRoute()
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
 const open = ref(false)
+
+const userInitials = computed(() => {
+  const fullName = String(user.value?.user_metadata?.full_name ?? '').trim()
+
+  if (fullName) {
+    return fullName
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('')
+  }
+
+  return user.value?.email?.slice(0, 2).toUpperCase() || 'SS'
+})
+
+async function signOut() {
+  await supabase.auth.signOut()
+  await navigateTo('/login')
+}
 
 function isActive(path: string) {
   return route.path === path || route.path.startsWith(`${path}/`)
@@ -67,7 +88,13 @@ function isActive(path: string) {
 
         <div class="portal-topbar-actions">
           <UButton icon="i-lucide-bell" color="neutral" variant="ghost" aria-label="Notifications" />
-          <UAvatar text="VK" size="sm" />
+          <UDropdownMenu
+            :items="[[{ label: user?.email || 'Account', type: 'label' }], [{ label: 'Sign out', icon: 'i-lucide-log-out', onSelect: signOut }]]"
+          >
+            <UButton color="neutral" variant="ghost" aria-label="Account menu">
+              <UAvatar :text="userInitials" size="sm" />
+            </UButton>
+          </UDropdownMenu>
         </div>
       </header>
 
