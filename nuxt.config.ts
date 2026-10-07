@@ -2,6 +2,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
 
   modules: [
+    '@nuxt/eslint',
     '@nuxt/ui',
     '@nuxtjs/supabase'
   ],
