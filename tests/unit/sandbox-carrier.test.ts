@@ -85,6 +85,7 @@ describe('SandboxCarrierAdapter', () => {
       currency: 'CAD'
     })
     expect(label.trackingNumber).toBe('SIG1234567890')
+    expect(label.trackingNumber).toMatch(/^SIG[A-Z0-9]{10}$/)
     expect(label.metadata).toMatchObject({
       serviceCode: 'express',
       idempotencyKey: 'purchase-1'
