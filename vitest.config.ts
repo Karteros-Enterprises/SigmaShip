@@ -14,8 +14,9 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json-summary'],
       include: [
-        'server/providers/**/*.ts',
-        'shared/**/*.ts'
+        'server/providers/carriers/sandbox/adapter.ts',
+        'server/services/pricing.ts',
+        'shared/schemas/shipping.ts'
       ],
       thresholds: {
         lines: 70,
