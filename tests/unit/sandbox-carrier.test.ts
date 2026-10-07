@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { SandboxCarrierAdapter } from '../../../server/providers/carriers/sandbox/adapter'
-import type { LabelPurchaseRequest, RateRequest } from '../../../shared/contracts/carrier'
+import { SandboxCarrierAdapter } from '../../server/providers/carriers/sandbox/adapter'
+import type { LabelPurchaseRequest, RateRequest } from '../../shared/contracts/carrier'
 
 const sender = {
   contactName: 'SigmaShip',
