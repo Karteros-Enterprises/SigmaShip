@@ -1,4 +1,4 @@
-import type { CanonicalAddress } from '#shared/contracts/carrier'
+import type { CanonicalAddress } from '#shared/types/domain'
 
 export type PickupStatus =
   | 'scheduled'
