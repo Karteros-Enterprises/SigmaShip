@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
 definePageMeta({
   layout: false
 })
 
 const route = useRoute()
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 const errorMessage = ref('')
 
@@ -12,18 +13,37 @@ onMounted(async () => {
   const code = typeof route.query.code === 'string' ? route.query.code : ''
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
       errorMessage.value = error.message
       return
     }
 
-    await navigateTo('/ship', { replace: true })
+    const { data: membership } = await supabase
+      .from('memberships')
+      .select('organization_id')
+      .eq('user_id', data.user?.id ?? '')
+      .limit(1)
+      .maybeSingle()
+
+    await navigateTo(membership?.organization_id ? '/ship' : '/onboarding', { replace: true })
     return
   }
 
-  await navigateTo(user.value ? '/ship' : '/login', { replace: true })
+  if (!user.value) {
+    await navigateTo('/login', { replace: true })
+    return
+  }
+
+  const { data: membership } = await supabase
+    .from('memberships')
+    .select('organization_id')
+    .eq('user_id', user.value.id)
+    .limit(1)
+    .maybeSingle()
+
+  await navigateTo(membership?.organization_id ? '/ship' : '/onboarding', { replace: true })
 })
 </script>
 
