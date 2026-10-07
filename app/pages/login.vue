@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
 definePageMeta({
   middleware: 'guest'
 })
@@ -7,7 +8,7 @@ useHead({
   title: 'Sign in'
 })
 
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 const email = ref('')
 const password = ref('')
 const submitting = ref(false)
@@ -17,7 +18,7 @@ async function signIn() {
   errorMessage.value = ''
   submitting.value = true
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: email.value.trim(),
     password: password.value
   })
@@ -29,7 +30,14 @@ async function signIn() {
     return
   }
 
-  await navigateTo('/ship')
+  const { data: membership } = await supabase
+    .from('memberships')
+    .select('organization_id')
+    .eq('user_id', data.user.id)
+    .limit(1)
+    .maybeSingle()
+
+  await navigateTo(membership?.organization_id ? '/ship' : '/onboarding')
 }
 </script>
 
