@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Database } from '~/types/database.types'
+
 definePageMeta({
   middleware: 'auth'
 })
@@ -7,7 +9,7 @@ useHead({
   title: 'Set up your workspace'
 })
 
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 const user = useSupabaseUser()
 const organizationName = ref('')
 const organizationSlug = ref('')
