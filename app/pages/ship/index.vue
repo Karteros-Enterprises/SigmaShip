@@ -3,7 +3,7 @@ import type { CanonicalAddress, Package } from '#shared/types/domain'
 
 definePageMeta({
   layout: 'portal',
-  middleware: ['auth', 'onboarded']
+  middleware: ['auth']
 })
 
 useHead({ title: 'Ship' })
