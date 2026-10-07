@@ -86,33 +86,39 @@ async function createWorkspace() {
         </div>
 
         <UForm class="onboarding-form" @submit.prevent="createWorkspace">
-          <UFormField label="Company or workspace name">
-            <UInput
+          <div class="onboarding-field">
+            <label for="organization-name">Company or workspace name</label>
+            <input
+              id="organization-name"
               v-model="organizationName"
-              size="xl"
+              type="text"
               placeholder="Acme Distribution"
               maxlength="120"
+              autocomplete="organization"
               required
-            />
-          </UFormField>
-
-          <UFormField
-            label="Workspace ID"
-            hint="Lowercase letters, numbers and hyphens"
-          >
-            <UInput
-              :model-value="organizationSlug"
-              size="xl"
-              placeholder="acme-distribution"
-              maxlength="80"
-              required
-              @update:model-value="updateSlug(String($event))"
             >
-              <template #leading>
-                <span class="slug-prefix">sigmaship /</span>
-              </template>
-            </UInput>
-          </UFormField>
+          </div>
+
+          <div class="onboarding-field">
+            <div class="onboarding-field-heading">
+              <label for="organization-slug">Workspace ID</label>
+              <span>Lowercase letters, numbers and hyphens</span>
+            </div>
+
+            <div class="workspace-id-control">
+              <span class="slug-prefix">sigmaship /</span>
+              <input
+                id="organization-slug"
+                :value="organizationSlug"
+                type="text"
+                placeholder="acme-distribution"
+                maxlength="80"
+                spellcheck="false"
+                required
+                @input="updateSlug(($event.target as HTMLInputElement).value)"
+              >
+            </div>
+          </div>
 
           <UAlert
             v-if="errorMessage"
