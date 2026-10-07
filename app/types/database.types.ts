@@ -43,6 +43,32 @@ export interface Database {
         }
         Relationships: []
       }
+      onboarding_states: {
+        Row: {
+          user_id: string
+          organization_id: string | null
+          completed: boolean
+          current_step: string
+          completed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          organization_id?: string | null
+          completed?: boolean
+          current_step?: string
+          completed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          organization_id?: string | null
+          completed?: boolean
+          current_step?: string
+          completed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rate_quotes: {
         Row: {
           id: string
