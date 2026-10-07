@@ -16,6 +16,32 @@ const organizationSlug = ref('')
 const slugTouched = ref(false)
 const submitting = ref(false)
 const errorMessage = ref('')
+const checkingWorkspace = ref(true)
+
+onMounted(async () => {
+  if (!user.value) {
+    checkingWorkspace.value = false
+    return
+  }
+
+  const { data: membership, error } = await supabase
+    .from('memberships')
+    .select('organization_id')
+    .eq('user_id', user.value.id)
+    .limit(1)
+    .maybeSingle()
+
+  checkingWorkspace.value = false
+
+  if (error) {
+    errorMessage.value = 'Unable to verify your SigmaShip workspace.'
+    return
+  }
+
+  if (membership?.organization_id) {
+    await navigateTo('/ship', { replace: true })
+  }
+})
 
 watch(organizationName, (name) => {
   if (slugTouched.value) {
@@ -40,6 +66,10 @@ function updateSlug(value: string) {
 }
 
 async function createWorkspace() {
+  if (checkingWorkspace.value) {
+    return
+  }
+
   if (!user.value) {
     await navigateTo('/login')
     return
@@ -56,11 +86,16 @@ async function createWorkspace() {
   submitting.value = false
 
   if (error) {
+    if (error.message.toLowerCase().includes('already belongs')) {
+      await navigateTo('/ship', { replace: true })
+      return
+    }
+
     errorMessage.value = error.message
     return
   }
 
-  await navigateTo('/ship')
+  await navigateTo('/ship', { replace: true })
 }
 </script>
 
@@ -131,7 +166,8 @@ async function createWorkspace() {
             type="submit"
             size="xl"
             trailing-icon="i-lucide-arrow-right"
-            :loading="submitting"
+            :loading="submitting || checkingWorkspace"
+            :disabled="checkingWorkspace"
           >
             Enter SigmaShip
           </UButton>
