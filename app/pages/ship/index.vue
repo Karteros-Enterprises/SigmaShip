@@ -80,6 +80,21 @@ const quoting = ref(false)
 const purchasing = ref(false)
 const errorMessage = ref('')
 
+interface FetchErrorData {
+  statusMessage?: string
+  message?: string
+}
+
+function getRequestErrorMessage(error: unknown, fallback: string) {
+  if (typeof error !== 'object' || error === null || !('data' in error)) {
+    return fallback
+  }
+
+  const data = (error as { data?: FetchErrorData }).data
+
+  return data?.statusMessage || data?.message || fallback
+}
+
 const selectedQuote = computed(() =>
   quotes.value.find((quote) => quote.id === selectedQuoteId.value)
 )
@@ -110,11 +125,11 @@ async function compareRates() {
     })
 
     quotes.value = response.quotes
-  } catch (error: any) {
-    errorMessage.value =
-      error?.data?.statusMessage ||
-      error?.data?.message ||
+  } catch (error: unknown) {
+    errorMessage.value = getRequestErrorMessage(
+      error,
       'Unable to compare rates.'
+    )
   } finally {
     quoting.value = false
   }
@@ -141,11 +156,11 @@ async function buyLabel() {
     )
 
     purchasedShipment.value = response.shipment
-  } catch (error: any) {
-    errorMessage.value =
-      error?.data?.statusMessage ||
-      error?.data?.message ||
+  } catch (error: unknown) {
+    errorMessage.value = getRequestErrorMessage(
+      error,
       'Unable to create shipment.'
+    )
   } finally {
     purchasing.value = false
   }
