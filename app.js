@@ -45,7 +45,128 @@ function quickQuote(){return shell('quick-quote',`<div class="eyebrow">Shipping 
 window.quickQuoteRates=()=>{let el=document.getElementById('quick-ratebox');if(el)el.innerHTML=`<div class="table"><div class="row head"><span>Carrier</span><span>Service</span><span>Transit</span><span>Estimate</span><span></span></div>${demoRates.map(r=>`<div class="row"><strong>${r[0]}</strong><span>${r[1]}</span><span>${r[2]}</span><strong>${r[3]}</strong><button class="small-btn" data-route="quote">Continue →</button></div>`).join('')}</div>`;document.querySelectorAll('[data-route]').forEach(x=>x.onclick=()=>location.hash=x.dataset.route)}
 function savedQuotes(){return shell('saved-quotes',`<div class="eyebrow">Shipping / Saved Quotes</div><div class="toolbar"><div><h1>Saved quotes</h1><span class="muted">Return to estimates you've saved but haven't purchased.</span></div><button class="primary" data-route="quick-quote">+ New quote</button></div><div class="filterbar"><input placeholder="Search quote, destination or postal code"><select><option>All quotes</option><option>Active</option><option>Expired</option></select></div><div class="table quote-table"><div class="row head"><span>Quote</span><span>Route</span><span>Package</span><span>Best rate</span><span>Status</span></div><div class="row"><strong>SQ-2084</strong><span>Brampton → Vancouver</span><span>8 lb · 12×10×8</span><span>$18.42</span><button class="small-btn" data-route="quote">Complete shipment</button></div><div class="row"><strong>SQ-2083</strong><span>Brampton → Calgary</span><span>4 lb · 10×8×6</span><span>$16.80</span><span class="badge">Saved</span></div></div>`)}
 function products(){return shell('products',`<div class="eyebrow">E-Commerce / Products</div><div class="toolbar"><div><h1>Products</h1><span class="muted">Synced product data used to automate package and customs information.</span></div><button class="primary">+ Add product</button></div><div class="filterbar"><input placeholder="Search SKU or product"><select><option>All stores</option><option>Shopify</option><option>WooCommerce</option></select></div><div class="table"><div class="row head"><span>Product</span><span>SKU</span><span>Weight</span><span>HS code</span><span>Origin</span></div><div class="row"><strong>Estate Bottle</strong><span>AE-750</span><span>3.2 lb</span><span>1509.10</span><span>Greece</span></div><div class="row"><strong>Pour Spout</strong><span>AE-PS01</span><span>0.2 lb</span><span>3924.10</span><span>Canada</span></div></div>`)}
-function integrations(){const sales=[['amazon','Amazon','amazon.com','Marketplace & commerce'],['bluelink','BlueLink','bluelinkerp.com','ERP & order management'],['shopify','Shopify','shopify.com','Commerce platform'],['woocommerce','WooCommerce','woocommerce.com','Commerce platform'],['wix','Wix','wix.com','Commerce platform'],['bigcommerce','BigCommerce','bigcommerce.com','Commerce platform'],['magento2','Magento 2','magento.com','Commerce platform'],['lightspeed','Lightspeed','lightspeedhq.com','Retail & commerce'],['squarespace','Squarespace','squarespace.com','Commerce platform'],['ecwid','Ecwid','ecwid.com','Commerce platform']];const markets=[['amazon-marketplace','Amazon','amazon.com'],['temu','Temu','temu.com'],['etsy','Etsy','etsy.com'],['walmart','Walmart','walmart.com'],['bestbuy','Best Buy','bestbuy.com'],['ebay','eBay','ebay.com'],['reverb','Reverb','reverb.com'],['reebelo','Reebelo','reebelo.com']];const card=(x,market=false)=>`<div class="store-card integration-store-card" data-integration="${x[0]}"><div class="store-mark integration-logo"><img src="https://www.google.com/s2/favicons?domain=${x[2]}&sz=128" alt="${x[1]} logo" loading="lazy"></div><div class="integration-card-copy"><span class="status-dot off integration-state">NOT CONNECTED</span><h3>${x[1]}</h3><p class="muted">${market?'Marketplace':x[3]}</p></div><button class="ghost integration-connect" data-key="${x[0]}" data-name="${x[1]}">Connect</button></div>`;return shell('integrations',`<div class="eyebrow">Integrations</div><div class="toolbar"><div><h1>Integrations</h1><span class="muted">Connect every place you sell and manage fulfillment from one SigmaShip workspace.</span></div></div><div class="integration-block"><div class="section-heading"><div><h2>Sales channels</h2><p class="muted">10 integrations · Import orders and sync fulfillment and tracking automatically.</p></div></div><div class="store-grid integrations-store-grid">${sales.map(x=>card(x)).join('')}</div></div><div class="integration-block"><div class="section-heading"><div><div class="eyebrow">Marketplaces</div><h2>Marketplaces</h2><p class="muted">8 marketplaces · Connect marketplace accounts and ship their orders from the same workspace.</p></div></div><div class="store-grid integrations-store-grid">${markets.map(x=>card(x,true)).join('')}</div></div><div class="settings-grid integration-settings"><div class="card"><h3>Order import</h3><p class="muted">Automatically import paid, unfulfilled orders from connected channels.</p><label class="switch-row"><span>Auto import orders</span><input type="checkbox" checked></label></div><div class="card"><h3>Fulfillment sync</h3><p class="muted">Send carrier and tracking details back after label purchase.</p><label class="switch-row"><span>Sync tracking</span><input type="checkbox" checked></label></div></div>`)}
+const integrationSalesChannels = [
+  { key: 'amazon', name: 'Amazon', domain: 'amazon.com', description: 'Marketplace & commerce' },
+  { key: 'bluelink', name: 'BlueLink', domain: 'bluelinkerp.com', description: 'ERP & order management' },
+  { key: 'shopify', name: 'Shopify', domain: 'shopify.com', description: 'Commerce platform' },
+  { key: 'woocommerce', name: 'WooCommerce', domain: 'woocommerce.com', description: 'Commerce platform' },
+  { key: 'wix', name: 'Wix', domain: 'wix.com', description: 'Commerce platform' },
+  { key: 'bigcommerce', name: 'BigCommerce', domain: 'bigcommerce.com', description: 'Commerce platform' },
+  { key: 'magento2', name: 'Magento 2', domain: 'magento.com', description: 'Commerce platform' },
+  { key: 'lightspeed', name: 'Lightspeed', domain: 'lightspeedhq.com', description: 'Retail & commerce' },
+  { key: 'squarespace', name: 'Squarespace', domain: 'squarespace.com', description: 'Commerce platform' },
+  { key: 'ecwid', name: 'Ecwid', domain: 'ecwid.com', description: 'Commerce platform' },
+];
+
+const integrationMarketplaces = [
+  { key: 'amazon-marketplace', name: 'Amazon', domain: 'amazon.com' },
+  { key: 'temu', name: 'Temu', domain: 'temu.com' },
+  { key: 'etsy', name: 'Etsy', domain: 'etsy.com' },
+  { key: 'walmart', name: 'Walmart', domain: 'walmart.com' },
+  { key: 'bestbuy', name: 'Best Buy', domain: 'bestbuy.com' },
+  { key: 'ebay', name: 'eBay', domain: 'ebay.com' },
+  { key: 'reverb', name: 'Reverb', domain: 'reverb.com' },
+  { key: 'reebelo', name: 'Reebelo', domain: 'reebelo.com' },
+];
+
+function integrationCard(platform, type = 'channel') {
+  const description = type === 'marketplace' ? 'Marketplace' : platform.description;
+
+  return `
+    <article class="store-card integration-store-card" data-integration="${platform.key}">
+      <div class="store-mark integration-logo">
+        <img
+          src="https://www.google.com/s2/favicons?domain=${platform.domain}&sz=128"
+          alt="${platform.name} logo"
+          loading="lazy"
+        >
+      </div>
+
+      <div class="integration-card-copy">
+        <span class="status-dot off integration-state">NOT CONNECTED</span>
+        <h3>${platform.name}</h3>
+        <p class="muted">${description}</p>
+      </div>
+
+      <button
+        class="ghost integration-connect"
+        data-key="${platform.key}"
+        data-name="${platform.name}"
+      >
+        Connect
+      </button>
+    </article>
+  `;
+}
+
+function integrationSection(title, description, platforms, type = 'channel') {
+  return `
+    <section class="integration-block">
+      <div class="section-heading">
+        <div>
+          <h2>${title}</h2>
+          <p class="muted">${description}</p>
+        </div>
+      </div>
+
+      <div class="store-grid integrations-store-grid">
+        ${platforms.map(platform => integrationCard(platform, type)).join('')}
+      </div>
+    </section>
+  `;
+}
+
+function integrations() {
+  const salesChannels = integrationSection(
+    'Sales channels',
+    '10 integrations · Import orders and sync fulfillment and tracking automatically.',
+    integrationSalesChannels
+  );
+
+  const marketplaces = integrationSection(
+    'Marketplaces',
+    '8 marketplaces · Connect marketplace accounts and ship their orders from the same workspace.',
+    integrationMarketplaces,
+    'marketplace'
+  );
+
+  return shell('integrations', `
+    <div class="eyebrow">Integrations</div>
+
+    <div class="toolbar">
+      <div>
+        <h1>Integrations</h1>
+        <span class="muted">
+          Connect every place you sell and manage fulfillment from one SigmaShip workspace.
+        </span>
+      </div>
+    </div>
+
+    ${salesChannels}
+    ${marketplaces}
+
+    <div class="settings-grid integration-settings">
+      <div class="card">
+        <h3>Order import</h3>
+        <p class="muted">Automatically import paid, unfulfilled orders from connected channels.</p>
+        <label class="switch-row">
+          <span>Auto import orders</span>
+          <input type="checkbox" checked>
+        </label>
+      </div>
+
+      <div class="card">
+        <h3>Fulfillment sync</h3>
+        <p class="muted">Send carrier and tracking details back after label purchase.</p>
+        <label class="switch-row">
+          <span>Sync tracking</span>
+          <input type="checkbox" checked>
+        </label>
+      </div>
+    </div>
+  `);
+}
+
 function wireIntegrations(){if(location.hash!=='#integrations')return;let s=ssLoad();s.integrations=s.integrations||{};document.querySelectorAll('.integration-store-card').forEach(card=>{let key=card.dataset.integration,b=card.querySelector('.integration-connect'),state=card.querySelector('.integration-state'),connected=Boolean(s.integrations[key]);state.textContent=connected?'CONNECTED':'NOT CONNECTED';state.classList.toggle('off',!connected);card.classList.toggle('connected',connected);b.textContent=connected?'Manage':'Connect';b.onclick=()=>{if(connected){ssConfirm('Disconnect '+b.dataset.name+'?',()=>{let n=ssLoad();n.integrations=n.integrations||{};delete n.integrations[key];ssSave(n);render()})}else{let n=ssLoad();n.integrations=n.integrations||{};n.integrations[key]={name:b.dataset.name,connectedAt:new Date().toISOString()};ssSave(n);ssToast(b.dataset.name+' connected in demo mode.');render()}}})}
 function storeSettings(){return shell('store-settings',`<div class="eyebrow">E-Commerce / Store Settings</div><div class="toolbar"><div><h1>Store settings</h1><span class="muted">Connect sales channels and control how orders flow into SigmaShip.</span></div><button class="primary" onclick="integrationDemo('Store')">+ Connect store</button></div><div class="store-grid"><div class="store-card connected"><div class="store-mark">S</div><div><span class="status-dot">CONNECTED</span><h3>Shopify</h3><p class="muted">Ana's Estate · Orders and fulfillment syncing</p></div><button class="ghost">Manage</button></div><div class="store-card"><div class="store-mark">W</div><div><span class="status-dot off">NOT CONNECTED</span><h3>WooCommerce</h3><p class="muted">Import orders and sync tracking back automatically.</p></div><button class="ghost" onclick="integrationDemo('WooCommerce')">Connect</button></div></div><div class="settings-grid"><div class="card"><h3>Order import</h3><p class="muted">Automatically import paid, unfulfilled orders.</p><label class="switch-row"><span>Auto import orders</span><input type="checkbox" checked></label></div><div class="card"><h3>Fulfillment sync</h3><p class="muted">Send carrier and tracking details back after label purchase.</p><label class="switch-row"><span>Sync tracking</span><input type="checkbox" checked></label></div></div>`)}
 function carrierAccounts(){return shell('carrier-accounts',`<div class="eyebrow">Settings / Carrier Accounts</div><div class="toolbar"><div><h1>Carrier accounts</h1><span class="muted">Use your own negotiated carrier rates through SigmaShip.</span></div><button class="primary" onclick="addCarrierAccount()">+ Connect carrier account</button></div><div class="notice"><strong>Bring your own account</strong><br>Ship on your own carrier contract while using SigmaShip to quote, create labels, track shipments and manage orders. A SigmaShip processing fee applies to labels purchased using a connected carrier account.</div><div class="kpis"><div class="kpi"><small>Connected</small><strong id="carrier-connected-count">0</strong></div><div class="kpi"><small>Active</small><strong id="carrier-active-count">0</strong></div><div class="kpi"><small>BYOA fee</small><strong>$1.00</strong><span class="muted">demo / label</span></div></div><div id="carrier-account-list" class="list-cards"></div><div class="settings-grid"><div class="card"><h3>Rate preference</h3><p class="muted">Choose how your own rates compete with SigmaShip rates.</p><div class="form-field"><label>Default rate source</label><select onchange="saveCarrierPreference(this.value)"><option value="best">Show both · choose best price</option><option value="own">Prefer my carrier accounts</option><option value="sigma">Prefer SigmaShip rates</option></select></div></div><div class="card"><h3>How billing works</h3><p class="muted">Carrier transportation charges are billed according to your carrier agreement. SigmaShip separately charges the displayed platform/processing fee for labels created through your connected account.</p></div></div>`)}
