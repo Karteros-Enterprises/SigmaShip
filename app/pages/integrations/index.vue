@@ -1,4 +1,11 @@
 <script setup lang="ts">
+interface IntegrationSummary {
+  key: string
+  name: string
+  domain: string
+  description: string
+}
+
 definePageMeta({
   layout: 'portal'
 })
@@ -7,28 +14,28 @@ useHead({
   title: 'Integrations'
 })
 
-const salesChannels = [
-  ['amazon', 'Amazon', 'amazon.com', 'Marketplace & commerce'],
-  ['bluelink', 'BlueLink', 'bluelinkerp.com', 'ERP & order management'],
-  ['shopify', 'Shopify', 'shopify.com', 'Commerce platform'],
-  ['woocommerce', 'WooCommerce', 'woocommerce.com', 'Commerce platform'],
-  ['wix', 'Wix', 'wix.com', 'Commerce platform'],
-  ['bigcommerce', 'BigCommerce', 'bigcommerce.com', 'Commerce platform'],
-  ['magento2', 'Magento 2', 'adobe.com', 'Commerce platform'],
-  ['lightspeed', 'Lightspeed', 'lightspeedhq.com', 'Retail & commerce'],
-  ['squarespace', 'Squarespace', 'squarespace.com', 'Commerce platform'],
-  ['ecwid', 'Ecwid', 'ecwid.com', 'Commerce platform']
+const salesChannels: IntegrationSummary[] = [
+  { key: 'amazon', name: 'Amazon', domain: 'amazon.com', description: 'Marketplace & commerce' },
+  { key: 'bluelink', name: 'BlueLink', domain: 'bluelinkerp.com', description: 'ERP & order management' },
+  { key: 'shopify', name: 'Shopify', domain: 'shopify.com', description: 'Commerce platform' },
+  { key: 'woocommerce', name: 'WooCommerce', domain: 'woocommerce.com', description: 'Commerce platform' },
+  { key: 'wix', name: 'Wix', domain: 'wix.com', description: 'Commerce platform' },
+  { key: 'bigcommerce', name: 'BigCommerce', domain: 'bigcommerce.com', description: 'Commerce platform' },
+  { key: 'magento2', name: 'Magento 2', domain: 'adobe.com', description: 'Commerce platform' },
+  { key: 'lightspeed', name: 'Lightspeed', domain: 'lightspeedhq.com', description: 'Retail & commerce' },
+  { key: 'squarespace', name: 'Squarespace', domain: 'squarespace.com', description: 'Commerce platform' },
+  { key: 'ecwid', name: 'Ecwid', domain: 'ecwid.com', description: 'Commerce platform' }
 ]
 
-const marketplaces = [
-  ['amazon', 'Amazon', 'amazon.com'],
-  ['temu', 'Temu', 'temu.com'],
-  ['etsy', 'Etsy', 'etsy.com'],
-  ['walmart', 'Walmart', 'walmart.com'],
-  ['bestbuy', 'Best Buy', 'bestbuy.ca'],
-  ['ebay', 'eBay', 'ebay.com'],
-  ['reverb', 'Reverb', 'reverb.com'],
-  ['reebelo', 'Reebelo', 'reebelo.com']
+const marketplaces: IntegrationSummary[] = [
+  { key: 'amazon', name: 'Amazon', domain: 'amazon.com', description: 'Marketplace' },
+  { key: 'temu', name: 'Temu', domain: 'temu.com', description: 'Marketplace' },
+  { key: 'etsy', name: 'Etsy', domain: 'etsy.com', description: 'Marketplace' },
+  { key: 'walmart', name: 'Walmart', domain: 'walmart.com', description: 'Marketplace' },
+  { key: 'bestbuy', name: 'Best Buy', domain: 'bestbuy.ca', description: 'Marketplace' },
+  { key: 'ebay', name: 'eBay', domain: 'ebay.com', description: 'Marketplace' },
+  { key: 'reverb', name: 'Reverb', domain: 'reverb.com', description: 'Marketplace' },
+  { key: 'reebelo', name: 'Reebelo', domain: 'reebelo.com', description: 'Marketplace' }
 ]
 </script>
 
@@ -48,12 +55,12 @@ const marketplaces = [
 
       <div class="integration-grid">
         <IntegrationCard
-          v-for="[key, name, domain, description] in salesChannels"
-          :key="key"
-          :provider-key="key"
-          :name="name"
-          :domain="domain"
-          :description="description"
+          v-for="provider in salesChannels"
+          :key="provider.key"
+          :provider-key="provider.key"
+          :name="provider.name"
+          :domain="provider.domain"
+          :description="provider.description"
         />
       </div>
     </section>
@@ -66,12 +73,12 @@ const marketplaces = [
 
       <div class="integration-grid">
         <IntegrationCard
-          v-for="[key, name, domain] in marketplaces"
-          :key="key"
-          :provider-key="key"
-          :name="name"
-          :domain="domain"
-          description="Marketplace"
+          v-for="provider in marketplaces"
+          :key="provider.key"
+          :provider-key="provider.key"
+          :name="provider.name"
+          :domain="provider.domain"
+          :description="provider.description"
         />
       </div>
     </section>
