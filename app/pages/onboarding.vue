@@ -6,7 +6,7 @@ definePageMeta({
 })
 
 useHead({
-  title: 'Set up your workspace'
+  title: 'Set up your ΣigmaSpace'
 })
 
 const supabase = useSupabaseClient<Database>()
@@ -80,7 +80,7 @@ async function createWorkspace() {
   const slug = slugify(organizationSlug.value)
 
   if (!name || !slug) {
-    errorMessage.value = 'Enter a company name and workspace ID.'
+    errorMessage.value = 'Enter a company name and ΣigmaSpace ID.'
     return
   }
 
@@ -106,7 +106,7 @@ async function createWorkspace() {
   } catch (error) {
     errorMessage.value = error instanceof Error
       ? error.message
-      : 'Unable to create your workspace. Please try again.'
+      : 'Unable to create your ΣigmaSpace. Please try again.'
   } finally {
     submitting.value = false
   }
@@ -126,17 +126,17 @@ async function createWorkspace() {
 
       <div class="onboarding-grid">
         <div class="onboarding-copy">
-          <p class="auth-eyebrow">YOUR WORKSPACE</p>
+          <p class="auth-eyebrow">YOUR ΣIGMASPACE</p>
           <h1>What should we call your shipping operation?</h1>
           <p>
-            This becomes the secure workspace for your team, shipments,
+            This becomes the secure ΣigmaSpace for your team, shipments,
             integrations and billing.
           </p>
         </div>
 
         <form class="onboarding-form" @submit.prevent="createWorkspace">
           <div class="onboarding-field">
-            <label for="organization-name">Company or workspace name</label>
+            <label for="organization-name">Company or ΣigmaSpace name</label>
             <input
               id="organization-name"
               v-model="organizationName"
@@ -150,7 +150,7 @@ async function createWorkspace() {
 
           <div class="onboarding-field">
             <div class="onboarding-field-heading">
-              <label for="organization-slug">Workspace ID</label>
+              <label for="organization-slug">ΣigmaSpace ID</label>
               <span>Lowercase letters, numbers and hyphens</span>
             </div>
 
