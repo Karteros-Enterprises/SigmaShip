@@ -1430,3 +1430,45 @@ body,
   box-shadow: 0 0 0 1000px #ffffff inset !important;
   caret-color: #0b0c0d;
 }
+
+
+/* Approved SigmaShip prototype visual system */
+:root{--sigma-ink:#0b0c0f;--sigma-muted:#77766f;--sigma-line:#d8d5cc;--sigma-surface:#fff;--sigma-canvas:#f4f2ec;--sigma-accent:#c8ff32}
+body{font-family:Manrope,Arial,sans-serif;background:var(--sigma-canvas);color:var(--sigma-ink)}
+.portal-shell{grid-template-columns:246px minmax(0,1fr);background:#f4f2ec}
+.portal-sidebar{padding:22px 14px;background:#101114;border-right:1px solid #25272c}
+.portal-brand{padding:0 8px 22px;border-bottom:1px solid #292b30;font-size:18px}
+.portal-brand-mark{width:34px;height:34px;border-radius:8px;background:var(--sigma-accent);color:var(--sigma-ink);font-size:21px}
+.portal-navigation{gap:19px;padding-top:17px}
+.portal-nav-group>p{margin:0 10px 7px;color:#70747d;font-family:"DM Mono",monospace;font-size:9px;letter-spacing:.14em}
+.portal-nav-link{min-height:36px;padding:9px 10px;border-radius:8px;color:#b6bac2;font-size:12px;font-weight:600}
+.portal-nav-link:hover{background:#191b20;color:#fff}
+.portal-nav-link.is-active{background:#25282e;color:#fff;box-shadow:none}
+.portal-nav-link.is-active:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sigma-accent);flex:0 0 6px}
+.portal-sidebar-footer{margin-top:auto;padding:16px 10px 0;border-top:1px solid #292b30}
+.portal-topbar{height:66px;padding:0 26px;background:rgba(244,242,236,.95);border-bottom:1px solid var(--sigma-line);backdrop-filter:blur(14px)}
+.portal-command-hint{max-width:520px;min-width:360px;padding:10px 12px;border-color:var(--sigma-line);background:#fff;border-radius:9px}
+.portal-workspace{width:100%;max-width:1500px;padding:34px}
+.page-stack{gap:24px}
+.page-header h1{font-size:44px;letter-spacing:-.045em;line-height:.98}
+.eyebrow{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.12em}
+.page-description{color:var(--sigma-muted)}
+.shipment-layout{grid-template-columns:minmax(0,1fr) 300px;gap:22px}
+.shipment-form-stack{gap:18px}
+.shipment-form-stack>div,.rate-section{border:1px solid var(--sigma-line)!important;border-radius:18px!important;background:#fff!important;box-shadow:none!important}
+.card-heading{padding-bottom:2px}
+.card-heading h2,.shipment-overview h2{font-size:22px;letter-spacing:-.03em}
+.placeholder-grid{gap:14px}
+.shipment-form-stack input,.shipment-form-stack select{min-height:46px!important;border-color:var(--sigma-line)!important;border-radius:9px!important;background:#faf9f5!important}
+.shipment-form-stack label{font-size:12px!important;font-weight:700!important}
+.shipment-overview{top:88px}
+.shipment-overview>div{background:#0b0c0f!important;color:#fff!important;border:0!important;border-radius:18px!important;box-shadow:none!important}
+.shipment-overview .eyebrow{color:var(--sigma-accent)}
+.overview-step{border-color:#2d3037}
+.overview-step>span{border-color:#3a3e47;color:var(--sigma-accent)}
+.overview-step strong{color:#fff}
+.overview-step p{color:#858a94}
+button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:#0b0c0f!important;color:#fff!important;border-radius:10px!important}
+.shipment-form-stack button[type=submit] svg{color:var(--sigma-accent)}
+@media(max-width:1100px){.portal-shell{grid-template-columns:190px minmax(0,1fr)}.shipment-layout{grid-template-columns:1fr}.shipment-overview{position:static;grid-row:1}}
+@media(max-width:760px){.portal-shell{grid-template-columns:1fr}.portal-sidebar{position:fixed;width:260px}.portal-workspace{padding:22px 14px}.portal-command-hint{min-width:0}}
