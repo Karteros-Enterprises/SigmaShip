@@ -87,7 +87,7 @@ export function createStallionClient(options: StallionClientOptions) {
 
   return {
     environment: isProduction ? 'production' : 'sandbox',
-    quoteRates: <T>(body: unknown) => request<T>('POST', '/rates', body),
+    quoteRates: <T>(body: unknown) => request<T>('POST', '/rates', body, crypto.randomUUID()),
     createShipment: <T>(body: unknown, key: string) => request<T>('POST', '/shipments', body, key),
     getShipmentRates: <T>(shipmentId: string) =>
       request<T>('GET', `/rates/${encodeURIComponent(shipmentId)}`),
