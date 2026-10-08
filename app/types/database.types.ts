@@ -26,8 +26,8 @@ export interface Database {
   public: {
     Tables: {
       organizations: {
-        Row: { id: string; name: string; slug: string; created_at: string; markup_percent: number; markup_fixed: number; accessorial_markup_percent: number; accessorial_markup_fixed: number }
-        Insert: { id?: string; name: string; slug: string; created_at?: string; markup_percent?: number; markup_fixed?: number; accessorial_markup_percent?: number; accessorial_markup_fixed?: number }
+        Row: { id: string; name: string; slug: string; is_active: boolean; created_at: string; markup_percent: number; markup_fixed: number; accessorial_markup_percent: number; accessorial_markup_fixed: number }
+        Insert: { id?: string; name: string; slug: string; is_active?: boolean; created_at?: string; markup_percent?: number; markup_fixed?: number; accessorial_markup_percent?: number; accessorial_markup_fixed?: number }
         Update: Partial<Database['public']['Tables']['organizations']['Insert']>
         Relationships: []
       }
