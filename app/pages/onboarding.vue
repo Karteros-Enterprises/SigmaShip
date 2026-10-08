@@ -10,7 +10,6 @@ useHead({
 })
 
 const supabase = useSupabaseClient<Database>()
-const user = useSupabaseUser()
 const organizationName = ref('')
 const organizationSlug = ref('')
 const slugTouched = ref(false)
