@@ -19,7 +19,10 @@ const errorMessage = ref('')
 const checkingWorkspace = ref(true)
 
 onMounted(async () => {
-  if (!user.value) {
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const currentUser = authData.user
+
+  if (authError || !currentUser?.id) {
     checkingWorkspace.value = false
     return
   }
@@ -27,7 +30,7 @@ onMounted(async () => {
   const { data: onboardingState, error } = await supabase
     .from('onboarding_states')
     .select('organization_id, completed')
-    .eq('user_id', user.value.id)
+    .eq('user_id', currentUser.id)
     .maybeSingle()
 
   checkingWorkspace.value = false
@@ -66,8 +69,10 @@ async function createWorkspace() {
 
   errorMessage.value = ''
 
-  const currentUser = user.value ?? (await supabase.auth.getUser()).data.user
-  if (!currentUser) {
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const currentUser = authData.user
+
+  if (authError || !currentUser?.id) {
     errorMessage.value = 'Your session has expired. Please sign in again.'
     return
   }
