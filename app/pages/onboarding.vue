@@ -43,10 +43,7 @@ onMounted(async () => {
 })
 
 watch(organizationName, (name) => {
-  if (slugTouched.value) {
-    return
-  }
-
+  if (slugTouched.value) return
   organizationSlug.value = slugify(name)
 })
 
@@ -65,36 +62,50 @@ function updateSlug(value: string) {
 }
 
 async function createWorkspace() {
-  if (checkingWorkspace.value) {
-    return
-  }
-
-  if (!user.value) {
-    await navigateTo('/login')
-    return
-  }
+  if (checkingWorkspace.value || submitting.value) return
 
   errorMessage.value = ''
+
+  const currentUser = user.value ?? (await supabase.auth.getUser()).data.user
+  if (!currentUser) {
+    errorMessage.value = 'Your session has expired. Please sign in again.'
+    return
+  }
+
+  const name = organizationName.value.trim()
+  const slug = slugify(organizationSlug.value)
+
+  if (!name || !slug) {
+    errorMessage.value = 'Enter a company name and workspace ID.'
+    return
+  }
+
   submitting.value = true
 
-  const { error } = await supabase.rpc('create_organization', {
-    organization_name: organizationName.value.trim(),
-    organization_slug: organizationSlug.value
-  })
+  try {
+    const { error } = await supabase.rpc('create_organization', {
+      organization_name: name,
+      organization_slug: slug
+    })
 
-  submitting.value = false
+    if (error) {
+      if (error.message.toLowerCase().includes('already belongs')) {
+        await navigateTo('/ship', { replace: true })
+        return
+      }
 
-  if (error) {
-    if (error.message.toLowerCase().includes('already belongs')) {
-      await navigateTo('/ship', { replace: true })
+      errorMessage.value = error.message
       return
     }
 
-    errorMessage.value = error.message
-    return
+    await navigateTo('/ship', { replace: true })
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Unable to create your workspace. Please try again.'
+  } finally {
+    submitting.value = false
   }
-
-  await navigateTo('/ship', { replace: true })
 }
 </script>
 
@@ -119,7 +130,7 @@ async function createWorkspace() {
           </p>
         </div>
 
-        <UForm class="onboarding-form" @submit.prevent="createWorkspace">
+        <form class="onboarding-form" @submit.prevent="createWorkspace">
           <div class="onboarding-field">
             <label for="organization-name">Company or workspace name</label>
             <input
@@ -166,11 +177,11 @@ async function createWorkspace() {
             size="xl"
             trailing-icon="i-lucide-arrow-right"
             :loading="submitting || checkingWorkspace"
-            :disabled="checkingWorkspace"
+            :disabled="submitting || checkingWorkspace"
           >
             Enter SigmaShip
           </UButton>
-        </UForm>
+        </form>
       </div>
     </section>
   </main>
