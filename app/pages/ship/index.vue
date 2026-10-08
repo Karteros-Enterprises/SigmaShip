@@ -343,7 +343,7 @@ function money(amount: number, currency: string) {
               icon="i-lucide-git-compare-arrows"
               :loading="quoting"
             >
-              Compare rates
+              Σigma Rates
             </UButton>
           </template>
         </UCard>
