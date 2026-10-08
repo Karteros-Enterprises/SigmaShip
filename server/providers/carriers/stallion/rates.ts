@@ -59,7 +59,7 @@ export function mapStallionRates(input: unknown): CarrierRate[] {
     throw new Error('Stallion returned an invalid rate list.')
   }
   return input.map((item: StallionRate) => {
-    const serviceCode = item.service || (typeof item.carrier === 'object' ? item.carrier?.service_code : undefined)
+    const serviceCode = typeof item.carrier === 'object' ? item.carrier?.service_code || item.service : item.service
     const total = Number(item.total)
     if (!serviceCode || !Number.isFinite(total) || total < 0 || !item.currency) {
       throw new Error('Stallion returned an incomplete rate.')
