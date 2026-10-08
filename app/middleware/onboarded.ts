@@ -1,6 +1,8 @@
 import type { Database } from '~/types/database.types'
 
 export default defineNuxtRouteMiddleware(async () => {
+  if (import.meta.server) return
+
   const supabase = useSupabaseClient<Database>()
   const { data: authData, error: authError } = await supabase.auth.getUser()
   const userId = authData.user?.id
@@ -15,13 +17,7 @@ export default defineNuxtRouteMiddleware(async () => {
     .eq('user_id', userId)
     .maybeSingle()
 
-  if (
-    !onboardingError &&
-    onboardingState?.organization_id &&
-    onboardingState.completed
-  ) {
-    return
-  }
+  if (!onboardingError && onboardingState?.organization_id && onboardingState.completed) return
 
   const { data: membership, error: membershipError } = await supabase
     .from('memberships')
@@ -30,18 +26,10 @@ export default defineNuxtRouteMiddleware(async () => {
     .limit(1)
     .maybeSingle()
 
-  if (membershipError) {
-    console.error('Unable to read organization membership', membershipError)
-    return navigateTo('/onboarding')
-  }
+  if (membership?.organization_id) return
 
-  if (membership?.organization_id) {
-    return
-  }
-
-  if (onboardingError) {
-    console.error('Unable to read onboarding state', onboardingError)
-  }
+  if (membershipError) console.error('Unable to read organization membership', membershipError)
+  if (onboardingError) console.error('Unable to read onboarding state', onboardingError)
 
   return navigateTo('/onboarding')
 })
