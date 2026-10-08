@@ -13,6 +13,9 @@ export default defineEventHandler(async (event) => {
   const body = quoteRequestSchema.parse(await readBody(event))
   const service = serverSupabaseServiceRole<Database>(event)
 
+  const { data: organization, error: organizationError } = await service.from('organizations').select('markup_percent,markup_fixed').eq('id', organizationId).single()
+  if (organizationError) throw createError({ statusCode: 500, statusMessage: 'Unable to load customer pricing.' })
+
   const carrierRates = process.env.STALLION_TOKEN
     ? await getStallionRates(body.sender, body.recipient, body.packages)
     : await getSandboxCarrier().getRates({
@@ -28,7 +31,7 @@ export default defineEventHandler(async (event) => {
   ).toISOString()
 
   const quoteRows = carrierRates.map((rate) => {
-    const pricing = priceCarrierRate(rate)
+    const pricing = priceCarrierRate(rate, { percent: Number(organization.markup_percent), fixed: Number(organization.markup_fixed) })
 
     return {
       organization_id: organizationId,
