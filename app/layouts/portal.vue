@@ -38,7 +38,7 @@ function isActive(path: string) {
         <span>SigmaShip</span>
       </NuxtLink>
 
-      <nav class="portal-navigation" aria-label="Main navigation">
+      <nav class="portal-navigation" aria-label="ΣigmaSpace navigation">
         <section
           v-for="group in portalNavigation"
           :key="group.label"
@@ -64,8 +64,8 @@ function isActive(path: string) {
       </nav>
 
       <div class="portal-sidebar-footer">
-        <p>Need help?</p>
-        <NuxtLink to="/tickets">Contact support</NuxtLink>
+        <p>ΣigmaSpace · Need help?</p>
+        <NuxtLink to="/integrations">Manage integrations</NuxtLink>
       </div>
     </aside>
 
