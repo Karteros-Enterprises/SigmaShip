@@ -7,6 +7,9 @@ export type Json =
   | Json[]
 
 type MembershipRole = 'owner' | 'admin' | 'shipper' | 'accounting' | 'viewer'
+type CarrierAccountOwner = CarrierAccountOwner
+type IntegrationStatus = IntegrationStatus
+type PlatformRole = 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'
 type ShipmentStatus =
   | 'draft'
   | 'rated'
@@ -29,14 +32,14 @@ export interface Database {
         Relationships: []
       }
       platform_users: {
-        Row: { user_id: string; role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active: boolean; created_at: string }
-        Insert: { user_id: string; role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active?: boolean; created_at?: string }
-        Update: { role?: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active?: boolean }
+        Row: { user_id: string; role: PlatformRole; active: boolean; created_at: string }
+        Insert: { user_id: string; role: PlatformRole; active?: boolean; created_at?: string }
+        Update: { role?: PlatformRole; active?: boolean }
         Relationships: []
       }
       carrier_accounts: {
-        Row: { id: string; organization_id: string | null; provider: string; ownership: 'sigmaship' | 'customer' | 'admin_managed'; display_name: string; external_account_id: string | null; status: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'; enabled: boolean; validated_at: string | null; last_error: string | null }
-        Insert: { id?: string; organization_id?: string | null; provider: string; ownership: 'sigmaship' | 'customer' | 'admin_managed'; display_name: string; external_account_id?: string | null; status?: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'; enabled?: boolean; validated_at?: string | null; last_error?: string | null }
+        Row: { id: string; organization_id: string | null; provider: string; ownership: CarrierAccountOwner; display_name: string; external_account_id: string | null; status: IntegrationStatus; enabled: boolean; validated_at: string | null; last_error: string | null }
+        Insert: { id?: string; organization_id?: string | null; provider: string; ownership: CarrierAccountOwner; display_name: string; external_account_id?: string | null; status?: IntegrationStatus; enabled?: boolean; validated_at?: string | null; last_error?: string | null }
         Update: Partial<Database['public']['Tables']['carrier_accounts']['Insert']>
         Relationships: []
       }
@@ -228,8 +231,8 @@ export interface Database {
       }
     }
     Enums: {
-      integration_status: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'
-      carrier_account_owner: 'sigmaship' | 'customer' | 'admin_managed'
+      integration_status: IntegrationStatus
+      carrier_account_owner: CarrierAccountOwner
       platform_role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'
       membership_role: MembershipRole
       shipment_status: ShipmentStatus
