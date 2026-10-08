@@ -2,6 +2,6 @@
 definePageMeta({layout:'admin',middleware:['platform-admin']});useHead({title:'Platform Admin'})
 const {data}=await useFetch('/api/admin/overview')
 const clients=computed(()=>data.value?.organizations?.length??0)
-const active=computed(()=>data.value?.shipments?.filter((s:any)=>!['delivered','cancelled'].includes(s.status)).length??0)
-const exceptions=computed(()=>data.value?.shipments?.filter((s:any)=>s.status==='exception').length??0)
+const active=computed(()=>data.value?.shipments?.filter((shipment)=>!['delivered','cancelled'].includes(shipment.status)).length??0)
+const exceptions=computed(()=>data.value?.shipments?.filter((shipment)=>shipment.status==='exception').length??0)
 </script><template><div class="page-stack"><AppPageHeader eyebrow="Platform" title="Operations control" description="System-wide view of clients, shipments, carrier connections, billing and commercial performance."/><div class="metric-grid"><UCard><p class="metric-label">Clients</p><strong>{{clients}}</strong><span>Connected organizations</span></UCard><UCard><p class="metric-label">Active shipments</p><strong>{{active}}</strong><span>Across all clients</span></UCard><UCard><p class="metric-label">Exceptions</p><strong>{{exceptions}}</strong><span>Require attention</span></UCard></div><UCard><div class="admin-quick-grid"><NuxtLink to="/admin/clients">Client accounts →</NuxtLink><NuxtLink to="/admin/tracking">Global tracking →</NuxtLink><NuxtLink to="/admin/carriers">Carrier accounts →</NuxtLink><NuxtLink to="/admin/pricing">Pricing & accessorials →</NuxtLink></div></UCard></div></template>
