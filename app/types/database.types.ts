@@ -34,6 +34,18 @@ export interface Database {
         Update: { role?: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active?: boolean }
         Relationships: []
       }
+      carrier_accounts: {
+        Row: { id: string; organization_id: string | null; provider: string; ownership: 'sigmaship' | 'customer' | 'admin_managed'; display_name: string; external_account_id: string | null; status: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'; enabled: boolean; validated_at: string | null; last_error: string | null }
+        Insert: { id?: string; organization_id?: string | null; provider: string; ownership: 'sigmaship' | 'customer' | 'admin_managed'; display_name: string; external_account_id?: string | null; status?: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'; enabled?: boolean; validated_at?: string | null; last_error?: string | null }
+        Update: Partial<Database['public']['Tables']['carrier_accounts']['Insert']>
+        Relationships: []
+      }
+      audit_events: {
+        Row: { id: number; organization_id: string; actor_user_id: string | null; action: string; entity_type: string; entity_id: string | null; metadata: Json; created_at: string }
+        Insert: { organization_id: string; actor_user_id?: string | null; action: string; entity_type: string; entity_id?: string | null; metadata?: Json; created_at?: string }
+        Update: Record<string, never>
+        Relationships: []
+      }
       memberships: {
         Row: {
           organization_id: string
