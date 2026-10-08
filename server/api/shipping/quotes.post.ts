@@ -2,6 +2,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import { quoteRequestSchema } from '#shared/schemas/shipping'
 import type { Database } from '~/types/database.types'
 import { getSandboxCarrier } from '../../utils/carrier'
+import { getStallionRates } from '../../providers/carriers/stallion/rates'
 import { requireShippingContext } from '../../utils/shipping-context'
 import { priceCarrierRate } from '../../services/pricing'
 
@@ -10,16 +11,17 @@ const QUOTE_LIFETIME_MINUTES = 15
 export default defineEventHandler(async (event) => {
   const { organizationId } = await requireShippingContext(event)
   const body = quoteRequestSchema.parse(await readBody(event))
-  const carrier = getSandboxCarrier()
   const service = serverSupabaseServiceRole<Database>(event)
 
-  const carrierRates = await carrier.getRates({
-    organizationId,
-    sender: body.sender,
-    recipient: body.recipient,
-    packages: body.packages,
-    currency: body.currency.toUpperCase()
-  })
+  const carrierRates = process.env.STALLION_TOKEN
+    ? await getStallionRates(body.sender, body.recipient, body.packages)
+    : await getSandboxCarrier().getRates({
+        organizationId,
+        sender: body.sender,
+        recipient: body.recipient,
+        packages: body.packages,
+        currency: body.currency.toUpperCase()
+      })
 
   const expiresAt = new Date(
     Date.now() + QUOTE_LIFETIME_MINUTES * 60_000
