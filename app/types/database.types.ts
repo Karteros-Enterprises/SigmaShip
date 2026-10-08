@@ -22,6 +22,18 @@ type ShipmentStatus =
 export interface Database {
   public: {
     Tables: {
+      organizations: {
+        Row: { id: string; name: string; slug: string; created_at: string; markup_percent: number; markup_fixed: number; accessorial_markup_percent: number; accessorial_markup_fixed: number }
+        Insert: { id?: string; name: string; slug: string; created_at?: string; markup_percent?: number; markup_fixed?: number; accessorial_markup_percent?: number; accessorial_markup_fixed?: number }
+        Update: Partial<Database['public']['Tables']['organizations']['Insert']>
+        Relationships: []
+      }
+      platform_users: {
+        Row: { user_id: string; role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active: boolean; created_at: string }
+        Insert: { user_id: string; role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active?: boolean; created_at?: string }
+        Update: { role?: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'; active?: boolean }
+        Relationships: []
+      }
       memberships: {
         Row: {
           organization_id: string
