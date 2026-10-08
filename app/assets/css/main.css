@@ -1541,3 +1541,51 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
   .page-header h1 { font-size: clamp(30px,8vw,42px); }
   .data-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
+
+/* Shipment address pairing and field-state parity */
+.shipment-form-stack .address-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  position: relative;
+  align-items: stretch;
+}
+.shipment-form-stack .address-pair > * { min-width: 0; }
+.shipment-form-stack .address-pair .address-swap {
+  position: absolute;
+  z-index: 2;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid var(--sigma-line);
+  background: var(--sigma-accent);
+  color: var(--sigma-ink);
+  box-shadow: 0 3px 12px rgba(0,0,0,.12);
+}
+.shipment-form-stack .address-pair .placeholder-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.shipment-form-stack :is(input,select,textarea),
+.shipment-form-stack :is(input,select,textarea):not(:placeholder-shown),
+.shipment-form-stack :is(input,select,textarea):valid {
+  background-color: #fff;
+  color: var(--sigma-ink);
+  border-color: var(--sigma-line);
+}
+.shipment-form-stack :is(input,select,textarea):focus {
+  border-color: var(--sigma-ink);
+}
+.shipment-overview .overview-step p {
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.shipment-overview .overview-step p + p { margin-top: 5px; }
+@media (max-width: 1250px) {
+  .shipment-layout { grid-template-columns: minmax(0,1fr); }
+  .shipment-overview { position: static; }
+}
+@media (max-width: 780px) {
+  .shipment-form-stack .address-pair { grid-template-columns: 1fr; gap: 20px; }
+  .shipment-form-stack .address-pair .address-swap { top: 50%; transform: translate(-50%,-50%); }
+}
