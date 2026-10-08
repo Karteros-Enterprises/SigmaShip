@@ -49,6 +49,18 @@ export interface Database {
         Update: Record<string, never>
         Relationships: []
       }
+      pickups: {
+        Row: { id: string; organization_id: string; provider: string; confirmation_number: string; status: 'scheduled' | 'cancelled' | 'completed'; address: Json; window_start: string; window_end: string; instructions: string | null; cancelled_at: string | null; created_by: string | null; created_at: string }
+        Insert: { id?: string; organization_id: string; provider: string; confirmation_number: string; status?: 'scheduled' | 'cancelled' | 'completed'; address: Json; window_start: string; window_end: string; instructions?: string | null; cancelled_at?: string | null; created_by?: string | null; created_at?: string }
+        Update: Partial<Database['public']['Tables']['pickups']['Insert']>
+        Relationships: []
+      }
+      pickup_shipments: {
+        Row: { pickup_id: string; shipment_id: string }
+        Insert: { pickup_id: string; shipment_id: string }
+        Update: Record<string, never>
+        Relationships: []
+      }
       memberships: {
         Row: {
           organization_id: string
