@@ -1,137 +1,51 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'portal'
-})
-
-useHead({
-  title: 'Pick Ups'
-})
-
-const pickups = [
-  {
-    id: 'PU-1048',
-    carrier: 'Purolator',
-    window: 'Today · 2:00 PM – 5:00 PM',
-    status: 'Scheduled',
-    parcels: [
-      {
-        shipment: 'SS-10482',
-        service: 'Purolator Ground',
-        tracking: 'PRL-782901284',
-        destination: 'Vancouver, BC',
-        package: '8.2 lb · 14 × 10 × 8 in'
-      },
-      {
-        shipment: 'SS-10483',
-        service: 'Purolator Express',
-        tracking: 'PRL-782901285',
-        destination: 'Ottawa, ON',
-        package: '3.4 lb · 12 × 9 × 6 in'
-      },
-      {
-        shipment: 'SS-10484',
-        service: 'Purolator Ground',
-        tracking: 'PRL-782901286',
-        destination: 'Halifax, NS',
-        package: '11.0 lb · 18 × 12 × 10 in'
-      }
-    ]
-  },
-  {
-    id: 'PU-1047',
-    carrier: 'UPS',
-    window: 'Oct 06 · 1:00 PM – 4:00 PM',
-    status: 'Completed',
-    parcels: [
-      {
-        shipment: 'SS-10480',
-        service: 'UPS Standard',
-        tracking: '1Z84A921039',
-        destination: 'Montréal, QC',
-        package: '5.1 lb · 12 × 10 × 8 in'
-      },
-      {
-        shipment: 'SS-10481',
-        service: 'UPS Standard',
-        tracking: '1Z84A921040',
-        destination: 'Québec, QC',
-        package: '6.8 lb · 14 × 10 × 8 in'
-      }
-    ]
-  }
-]
+definePageMeta({ layout: 'portal' })
+useHead({ title: 'Pick Ups' })
+interface PickupRow { id:string; provider:string; confirmation_number:string; status:string; window_start:string; window_end:string; instructions:string|null }
+const { data, error, refresh } = await useFetch<{ pickups: PickupRow[] }>('/api/pickups')
+const showForm = ref(false)
+const shipmentIds = ref('')
+const windowStart = ref('')
+const windowEnd = ref('')
+const instructions = ref('')
+const saving = ref(false)
+const submitError = ref('')
+const success = ref('')
+async function schedule() {
+  saving.value = true
+  submitError.value = ''
+  success.value = ''
+  try {
+    const ids = shipmentIds.value.split(/[\s,]+/).map(s => s.trim()).filter(Boolean)
+    if (!windowStart.value || !windowEnd.value) throw new Error('Choose a start and end time.')
+    const result = await $fetch<{ pickup: { confirmationNumber: string } }>('/api/pickups', {
+      method: 'POST',
+      body: { shipmentIds: ids, windowStart: new Date(windowStart.value).toISOString(), windowEnd: new Date(windowEnd.value).toISOString(), instructions: instructions.value }
+    })
+    success.value = 'Sandbox pickup scheduled: ' + result.pickup.confirmationNumber
+    showForm.value = false
+    shipmentIds.value = ''
+    await refresh()
+  } catch (cause) {
+    submitError.value = cause instanceof Error ? cause.message : 'Unable to schedule pickup.'
+  } finally { saving.value = false }
+}
 </script>
-
-<template>
-  <div class="page-stack">
-    <AppPageHeader
-      eyebrow="Pick Ups"
-      title="Carrier pickups"
-      description="Schedule collections and see every parcel included before the driver arrives."
-    >
-      <template #actions>
-        <UButton icon="i-lucide-calendar-plus">
-          Schedule pickup
-        </UButton>
-      </template>
-    </AppPageHeader>
-
-    <div class="card-list">
-      <UCard
-        v-for="pickup in pickups"
-        :key="pickup.id"
-      >
-        <template #header>
-          <div class="pickup-heading">
-            <div>
-              <p class="eyebrow">{{ pickup.id }}</p>
-              <h2>{{ pickup.carrier }}</h2>
-              <p>{{ pickup.window }}</p>
-            </div>
-
-            <div class="pickup-heading-meta">
-              <UBadge
-                :color="pickup.status === 'Completed' ? 'success' : 'info'"
-                variant="subtle"
-              >
-                {{ pickup.status }}
-              </UBadge>
-
-              <span>{{ pickup.parcels.length }} parcels</span>
-            </div>
-          </div>
-        </template>
-
-        <div class="data-table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Shipment</th>
-                <th>Service / Tracking</th>
-                <th>Ship To</th>
-                <th>Package</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr
-                v-for="parcel in pickup.parcels"
-                :key="parcel.tracking"
-              >
-                <td>{{ parcel.shipment }}</td>
-
-                <td>
-                  <strong>{{ parcel.service }}</strong>
-                  <span>{{ parcel.tracking }}</span>
-                </td>
-
-                <td>{{ parcel.destination }}</td>
-                <td>{{ parcel.package }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </UCard>
-    </div>
-  </div>
-</template>
+<template><div class="page-stack">
+<AppPageHeader eyebrow="Pick Ups" title="Carrier pickups" description="Schedule and review collections for your shipments. Sandbox scheduling is available; live carrier pickups are not enabled yet.">
+<template #actions><UButton icon="i-lucide-calendar-plus" @click="showForm = !showForm">Schedule sandbox pickup</UButton></template>
+</AppPageHeader>
+<UCard v-if="showForm"><template #header><h3>Schedule a sandbox pickup</h3></template>
+<div class="page-stack"><UFormField label="Shipment IDs (UUIDs, comma or space separated)"><UTextarea v-model="shipmentIds" placeholder="Paste shipment IDs from your created labels"/></UFormField>
+<UFormField label="Pickup window start"><UInput v-model="windowStart" type="datetime-local"/></UFormField>
+<UFormField label="Pickup window end"><UInput v-model="windowEnd" type="datetime-local"/></UFormField>
+<UFormField label="Driver instructions"><UTextarea v-model="instructions" placeholder="Optional instructions"/></UFormField>
+<p v-if="submitError">{{ submitError }}</p><UButton :loading="saving" @click="schedule">Confirm sandbox pickup</UButton></div></UCard>
+<p v-if="success">{{ success }}</p>
+<div v-if="error" class="empty-state"><h3>Pickups could not load</h3><p>{{ error.statusMessage || error.message }}</p></div>
+<div v-else-if="!data?.pickups.length" class="empty-state"><h3>No pickups scheduled</h3><p>Once you schedule a pickup, it will appear here.</p></div>
+<div v-else class="card-list"><UCard v-for="pickup in data.pickups" :key="pickup.id">
+<template #header><div class="pickup-heading"><div><p class="eyebrow">{{ pickup.confirmation_number }}</p><h2>{{ pickup.provider }}</h2><p>{{ new Date(pickup.window_start).toLocaleString() }} – {{ new Date(pickup.window_end).toLocaleString() }}</p></div><UBadge variant="subtle">{{ pickup.status }}</UBadge></div></template>
+<p v-if="pickup.instructions">{{ pickup.instructions }}</p>
+</UCard></div>
+</div></template>
