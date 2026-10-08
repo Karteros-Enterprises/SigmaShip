@@ -7,8 +7,8 @@ export type Json =
   | Json[]
 
 type MembershipRole = 'owner' | 'admin' | 'shipper' | 'accounting' | 'viewer'
-type CarrierAccountOwner = CarrierAccountOwner
-type IntegrationStatus = IntegrationStatus
+type CarrierAccountOwner = 'sigmaship' | 'customer' | 'admin_managed'
+type IntegrationStatus = 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'
 type PlatformRole = 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'
 type ShipmentStatus =
   | 'draft'
