@@ -14,6 +14,8 @@ const password = ref('')
 const submitting = ref(false)
 const errorMessage = ref('')
 const confirmationSent = ref(false)
+const resendMessage = ref('')
+const resendError = ref('')
 
 async function register() {
   errorMessage.value = ''
@@ -23,6 +25,7 @@ async function register() {
     email: email.value.trim(),
     password: password.value,
     options: {
+      emailRedirectTo: `${window.location.origin}/auth/confirm`,
       data: {
         full_name: fullName.value.trim()
       }
@@ -42,6 +45,25 @@ async function register() {
   }
 
   await navigateTo('/onboarding')
+}
+async function resendConfirmation() {
+  resendMessage.value = ''
+  resendError.value = ''
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.value.trim(),
+    options: {
+      emailRedirectTo: `${window.location.origin}/auth/confirm`
+    }
+  })
+
+  if (error) {
+    resendError.value = error.message
+    return
+  }
+
+  resendMessage.value = 'Confirmation email sent again. Check your inbox and spam folder.'
 }
 </script>
 
@@ -113,6 +135,9 @@ async function register() {
         <p class="auth-eyebrow">CHECK YOUR EMAIL</p>
         <h1>Confirm your account.</h1>
         <p>We sent a confirmation link to <strong>{{ email }}</strong>.</p>
+        <p v-if="resendMessage">{{ resendMessage }}</p>
+        <UAlert v-if="resendError" color="error" variant="subtle" :description="resendError" />
+        <UButton variant="outline" :loading="submitting" @click="resendConfirmation">Resend confirmation email</UButton>
       </div>
 
       <p class="auth-switch">
