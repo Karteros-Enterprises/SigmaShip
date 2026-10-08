@@ -33,8 +33,8 @@ async function saveMarkup() {
 <template><div class="page-stack">
 <div v-if="error" class="empty-state"><h3>Client could not load</h3><p>{{ error.statusMessage || error.message }}</p></div>
 <template v-else-if="data?.client">
-<AppPageHeader eyebrow="Client" :title="data.client.name" :description="'Workspace: ' + data.client.slug"/>
-<div class="metric-grid"><UCard><p class="metric-label">Users</p><strong>{{ data.users.length }}</strong><span>Workspace members</span></UCard><UCard><p class="metric-label">Shipments</p><strong>{{ data.shipments.length }}</strong><span>Recent shipments</span></UCard><UCard><p class="metric-label">Carrier accounts</p><strong>{{ data.carrierAccounts.length }}</strong><span>Configured sources</span></UCard></div>
+<AppPageHeader eyebrow="Client" :title="data.client.name" :description="'ΣigmaSpace: ' + data.client.slug"/>
+<div class="metric-grid"><UCard><p class="metric-label">Users</p><strong>{{ data.users.length }}</strong><span>ΣigmaSpace members</span></UCard><UCard><p class="metric-label">Shipments</p><strong>{{ data.shipments.length }}</strong><span>Recent shipments</span></UCard><UCard><p class="metric-label">Carrier accounts</p><strong>{{ data.carrierAccounts.length }}</strong><span>Configured sources</span></UCard></div>
 <div class="admin-two-column"><UCard><template #header><strong>Customer markup</strong></template><div class="page-stack">
 <UFormField label="Shipping markup (%)"><UInput v-model.number="form.markupPercent" type="number" min="0" step="0.01"/></UFormField>
 <UFormField label="Shipping fixed markup"><UInput v-model.number="form.markupFixed" type="number" min="0" step="0.01"/></UFormField>
