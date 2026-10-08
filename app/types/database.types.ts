@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-type MembershipRole = 'owner' | 'admin' | 'shipper' | 'viewer'
+type MembershipRole = 'owner' | 'admin' | 'shipper' | 'accounting' | 'viewer'
 type ShipmentStatus =
   | 'draft'
   | 'rated'
@@ -228,6 +228,9 @@ export interface Database {
       }
     }
     Enums: {
+      integration_status: 'not_configured' | 'pending' | 'connected' | 'degraded' | 'disconnected'
+      carrier_account_owner: 'sigmaship' | 'customer' | 'admin_managed'
+      platform_role: 'owner' | 'admin' | 'operations' | 'accounting' | 'sales' | 'support'
       membership_role: MembershipRole
       shipment_status: ShipmentStatus
     }
