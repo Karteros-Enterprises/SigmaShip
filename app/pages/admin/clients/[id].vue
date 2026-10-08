@@ -2,7 +2,13 @@
 definePageMeta({ layout: 'admin', middleware: ['platform-admin'] })
 const route = useRoute()
 const id = String(route.params.id)
-const { data, error, refresh } = await useFetch('/api/admin/clients/' + id)
+interface ClientDetailResponse {
+  client: { id: string; name: string; slug: string; markup_percent: number; markup_fixed: number; accessorial_markup_percent: number; accessorial_markup_fixed: number }
+  users: Array<{ user_id: string; role: string; created_at: string }>
+  shipments: Array<{ id: string; status: string; carrier: string | null; tracking_number: string | null; customer_charge: number | null; carrier_cost: number | null; markup_amount: number | null }>
+  carrierAccounts: Array<{ id: string; display_name: string; provider: string; status: string }>
+}
+const { data, error, refresh } = await useFetch<ClientDetailResponse>('/api/admin/clients/' + id)
 const form = reactive({ markupPercent: 0, markupFixed: 0, accessorialMarkupPercent: 0, accessorialMarkupFixed: 0 })
 watchEffect(() => {
   const client = data.value?.client
