@@ -186,3 +186,59 @@ async function createWorkspace() {
     </section>
   </main>
 </template>
+
+
+<style scoped>
+.onboarding-page {
+  min-height: 100vh;
+  padding: 36px;
+  background: #0b0c0d;
+  color: #fff;
+  box-sizing: border-box;
+}
+.onboarding-shell {
+  min-height: calc(100vh - 72px);
+  padding: clamp(28px, 5vw, 72px);
+  border-radius: 24px;
+  background: #f7f6f1;
+  color: #0b0c0d;
+  box-sizing: border-box;
+}
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.onboarding-header .auth-brand { position: static; }
+.onboarding-grid {
+  min-height: 70vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(340px, .9fr);
+  gap: clamp(48px, 8vw, 120px);
+  align-items: center;
+}
+.onboarding-copy h1 {
+  margin: 0;
+  max-width: 720px;
+  font-size: clamp(48px, 6vw, 86px);
+  font-weight: 650;
+  letter-spacing: -.055em;
+  line-height: .95;
+}
+.onboarding-form {
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  gap: 24px;
+  padding: clamp(34px, 4vw, 54px);
+  border: 1px solid #d8d7d0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(11,12,13,.08);
+}
+@media (max-width: 900px) {
+  .onboarding-page { padding: 0; }
+  .onboarding-shell { min-height: 100vh; border-radius: 0; }
+  .onboarding-grid { grid-template-columns: 1fr; gap: 48px; padding: 96px 0 32px; }
+}
+</style>
