@@ -99,6 +99,11 @@ const selectedQuote = computed(() =>
   quotes.value.find((quote) => quote.id === selectedQuoteId.value)
 )
 
+const senderComplete = computed(() => Boolean(sender.contactName && sender.address1 && sender.city && sender.region && sender.postalCode))
+const recipientComplete = computed(() => Boolean(recipient.contactName && recipient.address1 && recipient.city && recipient.region && recipient.postalCode))
+const addressSummary = (address: CanonicalAddress) => [address.address1, address.city, address.region, address.postalCode, address.countryCode].filter(Boolean).join(', ')
+const parcelSummary = computed(() => `${parcel.weight} ${parcel.weightUnit} · ${parcel.length} × ${parcel.width} × ${parcel.height} ${parcel.dimensionUnit}`)
+
 const isInternational = computed(
   () => sender.countryCode !== recipient.countryCode
 )
@@ -200,6 +205,7 @@ function money(amount: number, currency: string) {
 
     <div class="shipment-layout">
       <form class="shipment-form-stack" @submit.prevent="compareRates">
+        <div class="address-pair">
         <UCard>
           <template #header>
             <div class="card-heading">
@@ -248,15 +254,6 @@ function money(amount: number, currency: string) {
                 <p class="eyebrow">02 / TO</p>
                 <h2>Recipient</h2>
               </div>
-              <UButton
-                type="button"
-                color="neutral"
-                variant="ghost"
-                icon="i-lucide-arrow-up-down"
-                @click="swapAddresses"
-              >
-                Swap
-              </UButton>
             </div>
           </template>
 
@@ -299,6 +296,8 @@ function money(amount: number, currency: string) {
             description="Sandbox rating is available. Production carrier purchase will require customs details before launch."
           />
         </UCard>
+        <UButton class="address-swap" type="button" color="neutral" variant="outline" icon="i-lucide-arrow-left-right" aria-label="Swap sender and recipient" @click="swapAddresses">Swap</UButton>
+        </div>
 
         <UCard>
           <template #header>
@@ -421,29 +420,23 @@ function money(amount: number, currency: string) {
           </template>
 
           <div class="overview-steps">
-            <div class="overview-step active">
-              <span>1</span>
-              <div><strong>From</strong><p>{{ sender.city || 'Origin address' }}</p></div>
+            <div class="overview-step" :class="{ active: senderComplete }">
+              <span>1</span><div><strong>Sender · {{ senderComplete ? 'Ready' : 'Incomplete' }}</strong><p>{{ sender.contactName || 'Contact required' }}<template v-if="sender.company"> · {{ sender.company }}</template></p><p>{{ addressSummary(sender) || 'Enter origin address' }}</p></div>
+            </div>
+            <div class="overview-step" :class="{ active: recipientComplete }">
+              <span>2</span><div><strong>Recipient · {{ recipientComplete ? 'Ready' : 'Incomplete' }}</strong><p>{{ recipient.contactName || 'Contact required' }}<template v-if="recipient.company"> · {{ recipient.company }}</template></p><p>{{ addressSummary(recipient) || 'Enter destination address' }}</p></div>
             </div>
             <div class="overview-step active">
-              <span>2</span>
-              <div><strong>To</strong><p>{{ recipient.city || 'Destination address' }}</p></div>
-            </div>
-            <div class="overview-step active">
-              <span>3</span>
-              <div><strong>Package</strong><p>{{ parcel.weight }} {{ parcel.weightUnit }}</p></div>
+              <span>3</span><div><strong>Package details</strong><p>{{ parcelSummary }}</p><p>{{ isInternational ? 'Cross-border shipment · customs details required for live purchase' : 'Domestic shipment' }}</p></div>
             </div>
             <div class="overview-step" :class="{ active: quotes.length }">
-              <span>4</span>
-              <div><strong>Rates</strong><p>{{ quotes.length ? `${quotes.length} services found` : 'Compare carriers' }}</p></div>
+              <span>4</span><div><strong>Σigma Rates</strong><p>{{ quoting ? 'Comparing available services…' : quotes.length ? `${quotes.length} services available` : 'Compare available carrier services' }}</p><p v-if="selectedQuote">{{ selectedQuote.serviceName }} · {{ money(selectedQuote.customerPrice, selectedQuote.currency) }} · {{ selectedQuote.transitDays ? selectedQuote.transitDays + ' business days' : 'Transit pending' }}</p></div>
             </div>
             <div class="overview-step" :class="{ active: selectedQuote }">
-              <span>5</span>
-              <div><strong>Purchase</strong><p>{{ selectedQuote?.serviceName || 'Select a service' }}</p></div>
+              <span>5</span><div><strong>Shipment creation</strong><p>{{ purchasing ? 'Creating shipment…' : purchasedShipment ? 'Shipment created' : selectedQuote ? `Ready to purchase · ${money(selectedQuote.customerPrice, selectedQuote.currency)}` : 'Select a rate to continue' }}</p><p v-if="purchasedShipment">{{ purchasedShipment.carrier }} · {{ purchasedShipment.service }}</p></div>
             </div>
             <div class="overview-step" :class="{ active: purchasedShipment }">
-              <span>6</span>
-              <div><strong>Label</strong><p>{{ purchasedShipment?.trackingNumber || 'Print and track' }}</p></div>
+              <span>6</span><div><strong>Label & tracking</strong><p>{{ purchasedShipment?.trackingNumber || 'Label and tracking available after purchase' }}</p><p v-if="purchasedShipment">Label ready · Schedule a pickup from Pick Ups</p></div>
             </div>
           </div>
         </UCard>
