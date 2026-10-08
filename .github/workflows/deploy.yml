@@ -52,27 +52,24 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD" || { echo "::error::Missing SUPABASE_DB_PASSWORD"; exit 1; }
           test -n "$SUPABASE_PROJECT_REF" || { echo "::error::Missing SUPABASE_PROJECT_REF"; exit 1; }
 
-      - name: Install Supabase CLI
-        run: npm install --global supabase@latest
-
       - name: Link production Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
-        run: supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+        run: npx --yes supabase@latest link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
 
       - name: Preview pending database migrations
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --dry-run
+        run: npx --yes supabase@latest db push --linked --password "$SUPABASE_DB_PASSWORD" --dry-run
 
       - name: Apply pending database migrations before application deployment
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: supabase db push --linked --password "$SUPABASE_DB_PASSWORD" --yes
+        run: npx --yes supabase@latest db push --linked --password "$SUPABASE_DB_PASSWORD" --yes
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
