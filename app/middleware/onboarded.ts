@@ -1,17 +1,18 @@
 import type { Database } from '~/types/database.types'
 
 export default defineNuxtRouteMiddleware(async () => {
-  const user = useSupabaseUser()
   const supabase = useSupabaseClient<Database>()
+  const { data: authData, error: authError } = await supabase.auth.getUser()
+  const userId = authData.user?.id
 
-  if (!user.value) {
+  if (authError || !userId) {
     return navigateTo('/login')
   }
 
   const { data: onboardingState, error: onboardingError } = await supabase
     .from('onboarding_states')
     .select('organization_id, completed')
-    .eq('user_id', user.value.id)
+    .eq('user_id', userId)
     .maybeSingle()
 
   if (
@@ -25,7 +26,7 @@ export default defineNuxtRouteMiddleware(async () => {
   const { data: membership, error: membershipError } = await supabase
     .from('memberships')
     .select('organization_id')
-    .eq('user_id', user.value.id)
+    .eq('user_id', userId)
     .limit(1)
     .maybeSingle()
 
