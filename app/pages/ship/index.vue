@@ -291,7 +291,7 @@ function money(amount: number, currency: string) {
             </UFormField>
             <UFormField label="Province / State">
               <USelect v-model="sender.region" class="w-full" :items="addressOptions(sender.countryCode)" placeholder="Select province / state" required />
-              <input class="browser-region-autofill" :name="`shipping-${'sender'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('sender', $event)" @change="syncAutofilledRegion('sender', $event)" />
+              <input class="browser-region-autofill" :name="`shipping-${'sender'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('sender', $event)" @change="syncAutofilledRegion('sender', $event)">
             </UFormField>
             <UFormField label="City">
               <UInput v-model="sender.city" class="w-full" required />
@@ -307,10 +307,10 @@ function money(amount: number, currency: string) {
             </UFormField>
             
             <div class="span-2 address-options">
-              <label><input v-model="sender.residential" type="checkbox" /> Residential address</label>
-              <label><input v-model="senderExtras.notifications" type="checkbox" /> Shipment notification</label>
-              <label><input v-model="senderExtras.poBox" type="checkbox" /> P.O. Box</label>
-              <label><input v-model="senderExtras.save" type="checkbox" /> Save to address book</label>
+              <label><input v-model="sender.residential" type="checkbox"> Residential address</label>
+              <label><input v-model="senderExtras.notifications" type="checkbox"> Shipment notification</label>
+              <label><input v-model="senderExtras.poBox" type="checkbox"> P.O. Box</label>
+              <label><input v-model="senderExtras.save" type="checkbox"> Save to address book</label>
             </div>
           </div>
           
@@ -344,7 +344,7 @@ function money(amount: number, currency: string) {
             </UFormField>
             <UFormField label="Province / State">
               <USelect v-model="recipient.region" class="w-full" :items="addressOptions(recipient.countryCode)" placeholder="Select province / state" required />
-              <input class="browser-region-autofill" :name="`shipping-${'recipient'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('recipient', $event)" @change="syncAutofilledRegion('recipient', $event)" />
+              <input class="browser-region-autofill" :name="`shipping-${'recipient'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('recipient', $event)" @change="syncAutofilledRegion('recipient', $event)">
             </UFormField>
             <UFormField label="City">
               <UInput v-model="recipient.city" class="w-full" required />
@@ -360,10 +360,10 @@ function money(amount: number, currency: string) {
             </UFormField>
             <UFormField label="Reference code" class="span-2"><UInput v-model="recipientExtras.reference" class="w-full" /></UFormField>
             <div class="span-2 address-options">
-              <label><input v-model="recipient.residential" type="checkbox" /> Residential address</label>
-              <label><input v-model="recipientExtras.notifications" type="checkbox" /> Shipment notification</label>
-              <label><input v-model="recipientExtras.poBox" type="checkbox" /> P.O. Box</label>
-              <label><input v-model="recipientExtras.save" type="checkbox" /> Save to address book</label>
+              <label><input v-model="recipient.residential" type="checkbox"> Residential address</label>
+              <label><input v-model="recipientExtras.notifications" type="checkbox"> Shipment notification</label>
+              <label><input v-model="recipientExtras.poBox" type="checkbox"> P.O. Box</label>
+              <label><input v-model="recipientExtras.save" type="checkbox"> Save to address book</label>
             </div>
           </div>
           <UAlert v-if="isInternational" class="shipping-notice" color="warning" variant="subtle" icon="i-lucide-globe-2" title="Cross-border shipment" description="Customs details are required before live international label purchase." />
