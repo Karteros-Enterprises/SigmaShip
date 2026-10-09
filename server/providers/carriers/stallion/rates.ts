@@ -1,6 +1,6 @@
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
-import { configuredStallionClient, StallionApiError } from './client'
+import { configuredStallionClient } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
   return {
@@ -84,41 +84,8 @@ export async function getStallionRates(
   packages: Package[]
 ) {
   const client = configuredStallionClient()
-  try {
-    const response = await client.quoteRates<StallionRate[]>(
-      toStallionRateRequest(sender, recipient, packages)
-    )
-    return mapStallionRates(response.data)
-  } catch (error) {
-    if (!(error instanceof StallionApiError) || error.status !== 422) throw error
-    // Diagnostic only: never quote the customer using a reduced payload.
-    const first = packages[0]
-    if (!first) throw error
-    const weight = first.weightUnit === 'kg' ? first.weight * 2.2046226218 : first.weight
-    try {
-      const probe = await client.quoteRates<StallionRate[]>({
-        to_address: {
-          name: recipient.contactName,
-          address1: recipient.address1,
-          city: recipient.city,
-          province_code: recipient.region,
-          postal_code: recipient.postalCode,
-          country_code: recipient.countryCode
-        },
-        packages: [{
-          weight: Number(weight.toFixed(3)),
-          weight_unit: 'lbs',
-          package_contents: 'Merchandise'
-        }]
-      })
-      console.error('[stallion] Minimal rate probe succeeded; inspect full request mapping', {
-        rateCount: Array.isArray(probe.data) ? probe.data.length : 'unexpected'
-      })
-    } catch (probeError) {
-      console.error('[stallion] Minimal rate probe failed', {
-        status: probeError instanceof StallionApiError ? probeError.status : 'unknown'
-      })
-    }
-    throw error
-  }
+  const response = await client.quoteRates<StallionRate[]>(
+    toStallionRateRequest(sender, recipient, packages)
+  )
+  return mapStallionRates(response.data)
 }
