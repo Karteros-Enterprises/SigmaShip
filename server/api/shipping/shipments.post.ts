@@ -45,6 +45,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Never issue a carrier label until a verified, settled payment is linked to this quote.
+  // This endpoint must not accept client-provided payment status or payment method IDs.
+  throw createError({
+    statusCode: 503,
+    statusMessage: 'Shipment purchasing is temporarily unavailable until secure card-on-file billing and verified per-shipment payment are connected.'
+  })
+
   const shipmentId = crypto.randomUUID()
   const idempotencyKey = `sigmaship-${quote.id}`
   const carrier = quote.provider === 'sandbox' ? getSandboxCarrier() : null
