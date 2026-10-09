@@ -30,6 +30,12 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    // Declare the private key explicitly so Nitro accepts the
+    // NUXT_SUPABASE_SECRET_KEY runtime override in Vercel functions.
+    // Never expose this through runtimeConfig.public.
+    supabase: {
+      secretKey: ''
+    },
     public: {
       appName: 'SigmaShip'
     }
