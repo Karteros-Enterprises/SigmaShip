@@ -51,7 +51,7 @@ export function createStallionClient(options: StallionClientOptions) {
     if (!path.startsWith('/') || path.startsWith('//')) {
       throw new Error('Stallion request path must be relative.')
     }
-    if (isProduction && method !== 'GET' && !(method === 'POST' && path === '/rates') && process.env.STALLION_LIVE_WRITES_ENABLED !== 'true') {
+    if (isProduction && method !== 'GET' && !(method === 'POST' && (path === '/rates' || path === '/rates/estimate')) && process.env.STALLION_LIVE_WRITES_ENABLED !== 'true') {
       throw new Error('Live Stallion writes are disabled.')
     }
     const controller = new AbortController()
@@ -134,6 +134,7 @@ export function createStallionClient(options: StallionClientOptions) {
   return {
     environment: isProduction ? 'production' : 'sandbox',
     quoteRates: <T>(body: unknown) => request<T>('POST', '/rates', body, crypto.randomUUID()),
+    estimateRates: <T>(body: unknown) => request<T>('POST', '/rates/estimate', body, crypto.randomUUID()),
     createShipment: <T>(body: unknown, key: string) => request<T>('POST', '/shipments', body, key),
     getShipmentRates: <T>(shipmentId: string) =>
       request<T>('GET', `/rates/${encodeURIComponent(shipmentId)}`),
