@@ -47,9 +47,15 @@ export default defineEventHandler(async (event) => {
 
   // Never issue a carrier label until a verified, settled payment is linked to this quote.
   // This endpoint must not accept client-provided payment status or payment method IDs.
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Shipment purchasing requires a configured payment processor.'
+    })
+  }
   throw createError({
     statusCode: 503,
-    statusMessage: 'Shipment purchasing is temporarily unavailable until secure card-on-file billing and verified per-shipment payment are connected.'
+    statusMessage: 'Card-on-file payment verification is not yet implemented. No label has been purchased.'
   })
 
   const shipmentId = crypto.randomUUID()
