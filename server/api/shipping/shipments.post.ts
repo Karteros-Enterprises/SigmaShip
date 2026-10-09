@@ -53,10 +53,12 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Shipment purchasing requires a configured payment processor.'
     })
   }
-  throw createError({
-    statusCode: 503,
-    statusMessage: 'Card-on-file payment verification is not yet implemented. No label has been purchased.'
-  })
+  if (process.env.SIGMASHIP_PAYMENT_VERIFICATION_READY !== 'true') {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'Card-on-file payment verification is not yet implemented. No label has been purchased.'
+    })
+  }
 
   const shipmentId = crypto.randomUUID()
   const idempotencyKey = `sigmaship-${quote.id}`
