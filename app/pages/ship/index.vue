@@ -14,8 +14,7 @@ interface QuoteOption {
   serviceCode: string
   serviceName: string
   customerPrice: number
-  carrierCost: number
-  markupAmount: number
+  priceBreakdown?: { shipping: number, accessorials: { label: string, amount: number }[], taxes?: number, total: number }
   currency: string
   transitDays: number | null
   estimatedDelivery: string | null
@@ -140,7 +139,6 @@ const parcel = reactive<Package>({
 
 const quotes = ref<QuoteOption[]>([])
 const selectedQuoteId = ref('')
-const expandedPriceId = ref<string | null>(null)
 const purchasedShipment = ref<PurchasedShipment | null>(null)
 const quoting = ref(false)
 const purchasing = ref(false)
@@ -195,7 +193,6 @@ async function compareRates() {
   }
   purchasedShipment.value = null
   selectedQuoteId.value = ''
-  expandedPriceId.value = null
   quoting.value = true
 
   try {
@@ -453,23 +450,44 @@ function money(amount: number, currency: string) {
             <span class="rate-price">
               <strong>{{ money(quote.customerPrice, quote.currency) }}</strong>
               <small>{{ quote.currency }}</small>
-              <button
-                type="button"
-                class="rate-price-info"
-                :aria-label="`Show price breakdown for ${quote.serviceName}`"
-                :aria-expanded="expandedPriceId === quote.id"
-                @click.stop="expandedPriceId = expandedPriceId === quote.id ? null : quote.id"
-              >
-                <UIcon name="i-lucide-info" />
-                <span>Price details</span>
-              </button>
+              <UPopover mode="hover" :open-delay="150" :close-delay="200" :content="{ side: 'top', align: 'end', sideOffset: 10 }">
+                <button
+                  type="button"
+                  class="rate-price-info"
+                  :aria-label="`Price breakdown for ${quote.serviceName}`"
+                  @click.stop
+                >
+                  <UIcon name="i-lucide-info" />
+                  <span>Price details</span>
+                </button>
+                <template #content>
+                  <div class="rate-price-popup" @click.stop>
+                    <strong class="rate-price-popup-title">Price breakdown</strong>
+                    <div class="rate-price-popup-row">
+                      <span>Shipping</span>
+                      <strong>{{ money(quote.priceBreakdown?.shipping ?? quote.customerPrice, quote.currency) }}</strong>
+                    </div>
+                    <div
+                      v-for="(charge, index) in quote.priceBreakdown?.accessorials ?? []"
+                      :key="index"
+                      class="rate-price-popup-row"
+                    >
+                      <span>{{ charge.label }}</span>
+                      <strong>{{ money(charge.amount, quote.currency) }}</strong>
+                    </div>
+                    <div v-if="quote.priceBreakdown?.taxes !== undefined" class="rate-price-popup-row">
+                      <span>Taxes</span>
+                      <strong>{{ money(quote.priceBreakdown.taxes, quote.currency) }}</strong>
+                    </div>
+                    <div class="rate-price-popup-row rate-price-popup-total">
+                      <span>Total</span>
+                      <strong>{{ money(quote.customerPrice, quote.currency) }}</strong>
+                    </div>
+                    <p class="rate-price-popup-note">Only charges included in this quote are shown. Additional carrier adjustments, duties or taxes may apply.</p>
+                  </div>
+                </template>
+              </UPopover>
             </span>
-            <div v-if="expandedPriceId === quote.id" class="rate-breakdown">
-              <div><span>Carrier shipping rate</span><strong>{{ money(quote.carrierCost, quote.currency) }}</strong></div>
-              <div><span>SigmaShip service markup</span><strong>{{ money(quote.markupAmount, quote.currency) }}</strong></div>
-              <div class="rate-breakdown-total"><span>Quoted total</span><strong>{{ money(quote.customerPrice, quote.currency) }}</strong></div>
-              <small>Taxes, duties and carrier adjustments, if applicable, are not separately included in this quote.</small>
-            </div>
           </div>
 
           <UButton
@@ -544,8 +562,9 @@ function money(amount: number, currency: string) {
 .rate-choice { display: flex; flex: 1; min-width: 0; align-items: center; gap: 0.75rem; text-align: left; background: transparent; border: 0; cursor: pointer; color: inherit; }
 .rate-price-info { display: inline-flex; align-items: center; justify-content: flex-end; gap: .3rem; padding: .3rem 0; background: none; border: 0; color: var(--ui-primary); cursor: pointer; font-size: .78rem; }
 .rate-price-info:focus-visible, .rate-choice:focus-visible { outline: 2px solid var(--ui-primary); outline-offset: 3px; }
-.rate-breakdown { flex-basis: 100%; width: 100%; padding: .8rem 0 .2rem; border-top: 1px solid var(--ui-border); display: grid; gap: .4rem; }
-.rate-breakdown > div { display: flex; justify-content: space-between; gap: 1rem; }
-.rate-breakdown-total { padding-top: .5rem; border-top: 1px solid var(--ui-border); }
-.rate-breakdown > small { opacity: .75; line-height: 1.4; }
+.rate-price-popup { width: min(320px, 85vw); padding: 1rem; display: grid; gap: .6rem; }
+.rate-price-popup-title { font-size: .9rem; padding-bottom: .35rem; }
+.rate-price-popup-row { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; font-size: .85rem; }
+.rate-price-popup-total { border-top: 1px solid var(--ui-border); padding-top: .65rem; font-weight: 700; }
+.rate-price-popup-note { font-size: .72rem; opacity: .75; line-height: 1.5; }
 </style>
