@@ -280,7 +280,7 @@ function money(amount: number, currency: string) {
             description="Sandbox rating is available. Production carrier purchase will require customs details before launch."
           />
         </UCard>
-        <UButton class="address-swap" type="button" color="neutral" variant="outline" icon="i-lucide-arrow-left-right" aria-label="Swap sender and recipient" @click="swapAddresses">Swap</UButton>
+        <UButton class="address-swap" type="button" color="primary" variant="solid" icon="i-lucide-arrow-left-right" aria-label="Swap sender and recipient" title="Swap sender and recipient" @click="swapAddresses" />
         </div>
 
         <UCard>
