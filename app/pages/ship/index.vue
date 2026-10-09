@@ -78,7 +78,7 @@ const selectedQuoteId = ref('')
 const purchasedShipment = ref<PurchasedShipment | null>(null)
 const quoting = ref(false)
 const purchasing = ref(false)
-const errorMessage = ref('')
+const toast = useToast()
 
 interface FetchErrorData {
   statusMessage?: string
@@ -118,7 +118,6 @@ function shipmentPayload() {
 }
 
 async function compareRates() {
-  errorMessage.value = ''
   purchasedShipment.value = null
   selectedQuoteId.value = ''
   quoting.value = true
@@ -131,10 +130,7 @@ async function compareRates() {
 
     quotes.value = response.quotes
   } catch (error: unknown) {
-    errorMessage.value = getRequestErrorMessage(
-      error,
-      'Unable to compare rates.'
-    )
+    toast.add({ title: 'Unable to fetch rates', description: getRequestErrorMessage(error, 'Please try again.'), color: 'error', icon: 'i-lucide-circle-alert' })
   } finally {
     quoting.value = false
   }
@@ -145,7 +141,6 @@ async function buyLabel() {
     return
   }
 
-  errorMessage.value = ''
   purchasing.value = true
 
   try {
@@ -162,10 +157,7 @@ async function buyLabel() {
 
     purchasedShipment.value = response.shipment
   } catch (error: unknown) {
-    errorMessage.value = getRequestErrorMessage(
-      error,
-      'Unable to create shipment.'
-    )
+    toast.add({ title: 'Shipment could not be created', description: getRequestErrorMessage(error, 'Please try again.'), color: 'error', icon: 'i-lucide-circle-alert' })
   } finally {
     purchasing.value = false
   }
@@ -193,14 +185,6 @@ function money(amount: number, currency: string) {
       eyebrow="Shipping"
       title="Create shipment"
       description="Enter the shipment once. SigmaShip compares eligible services, locks the selected rate and creates the label."
-    />
-
-    <UAlert
-      v-if="errorMessage"
-      color="error"
-      variant="subtle"
-      icon="i-lucide-circle-alert"
-      :description="errorMessage"
     />
 
     <div class="shipment-layout">
