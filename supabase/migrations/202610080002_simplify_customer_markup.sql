@@ -1,7 +1,6 @@
 -- Simplify commercial pricing: markup belongs directly to the customer organization.
--- Profiles are intentionally removed; historical quotes/shipments already retain priced amounts.
-drop table if exists public.accessorial_profiles;
-drop table if exists public.pricing_profiles;
+-- Retain legacy profile tables and data; new pricing uses organization markup columns.
+-- Do not drop legacy tables in an automated production migration.
 alter table public.organizations
   add column if not exists markup_percent numeric(7,4) not null default 0,
   add column if not exists markup_fixed numeric(12,2) not null default 0,
