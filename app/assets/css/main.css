@@ -1640,3 +1640,43 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
     left: 50%;
   }
 }
+
+
+/* Ship: clear field outlines and a quiet, non-overlapping address swap control. */
+.shipment-form-stack .address-pair :is(input, select, button[role="combobox"]),
+.shipment-form-stack .package-grid :is(input, select, button[role="combobox"]) {
+  border: 1px solid #b7b9bd !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: #0b0c0f !important;
+  box-shadow: none !important;
+}
+.shipment-form-stack .address-pair :is(input, select, button[role="combobox"]):focus-visible,
+.shipment-form-stack .package-grid :is(input, select, button[role="combobox"]):focus-visible {
+  border-color: #22262b !important;
+  outline: 2px solid rgba(200,255,50,.65) !important;
+  outline-offset: 1px;
+}
+.shipment-form-stack .address-pair .address-swap {
+  top: 18px !important;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 30px;
+  padding: 4px 9px !important;
+  border: 1px solid #c5c8cd !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  color: #434951 !important;
+  font-size: 11px;
+  font-weight: 650;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06) !important;
+}
+.shipment-form-stack .address-pair .address-swap:hover {
+  border-color: #90969d !important;
+  background: #f4f5f1 !important;
+}
+@media (max-width: 780px) {
+  .shipment-form-stack .address-pair .address-swap {
+    top: 50% !important;
+  }
+}
