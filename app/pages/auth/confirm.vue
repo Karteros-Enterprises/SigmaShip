@@ -14,6 +14,11 @@ const errorMessage = ref('')
 
 onMounted(async () => {
   const code = typeof route.query.code === 'string' ? route.query.code : ''
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  if (route.query.type === 'recovery' || hash.get('type') === 'recovery') {
+    await navigateTo({ path: '/reset-password', query: code ? { code } : {} }, { replace: true })
+    return
+  }
 
   if (!code) {
     errorMessage.value = 'This confirmation link is missing its authorization code.'
