@@ -91,7 +91,13 @@ export function createStallionClient(options: StallionClientOptions) {
           console.error('[stallion] Validation rejected request', {
             code: errorCode,
             detailType: Array.isArray(details) ? 'array' : typeof details,
-            fields: validationFields.length ? validationFields : '(not provided by API)'
+            fields: validationFields.length ? validationFields : '(not provided by API)',
+            detailKeys: details && typeof details === 'object' && !Array.isArray(details)
+              ? Object.keys(details).slice(0, 15).filter(key => /^[a-zA-Z0-9_.-]{1,80}$/.test(key))
+              : [],
+            detailCodes: details && typeof details === 'object' && !Array.isArray(details)
+              ? Object.entries(details).filter(([key, value]) => /^(code|reason|type|status)$/i.test(key) && typeof value === 'string' && /^[a-zA-Z0-9_.-]{1,80}$/.test(value)).map(([key, value]) => `${key}: ${value}`)
+              : []
           })
         }
         throw new StallionApiError(
