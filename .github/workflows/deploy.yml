@@ -54,8 +54,7 @@ jobs:
 
       # GitHub-hosted runners do not support Supabase's IPv6-only direct endpoint.
       # Use the project's exact IPv4-compatible Session pooler URL (port 5432).
-      # Keep production migrations preview-only until their SQL and migration history
-      # have been reviewed. Never automatically push destructive schema changes.
+      # Production migrations are applied only after preview; keep SQL non-destructive.
       - name: Verify IPv4 database connection secret
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -75,6 +74,12 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: npx --yes supabase@latest db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Apply reviewed database migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: npx --yes supabase@latest db push --db-url "$SUPABASE_DB_URL" --yes
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
