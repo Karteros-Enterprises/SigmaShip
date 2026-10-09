@@ -65,7 +65,10 @@ onMounted(async () => {
   }
 
   if (onboardingState?.organization_id && onboardingState.completed) {
-    await navigateTo('/ship', { replace: true })
+    const { data: membership } = await supabase.from('memberships')
+      .select('organization_id').eq('user_id', currentUser.id)
+      .eq('organization_id', onboardingState.organization_id).maybeSingle()
+    if (membership?.organization_id) await navigateTo('/ship', { replace: true })
   }
 })
 
