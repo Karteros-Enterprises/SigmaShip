@@ -3,18 +3,18 @@ import type { CarrierRate } from '#shared/contracts/carrier'
 import { configuredStallionClient, StallionApiError } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
+  const country = address.countryCode.trim().toUpperCase()
+  const postal = address.postalCode.trim().toUpperCase().replace(/\s+/g, '')
+  const postalCode = country === 'CA' && /^[A-Z][0-9][A-Z][0-9][A-Z][0-9]$/.test(postal)
+    ? postal.slice(0, 3) + ' ' + postal.slice(3)
+    : postal
   return {
-    name: address.contactName,
-    ...(address.company ? { company: address.company } : {}),
-    address1: address.address1,
-    ...(address.address2 ? { address2: address.address2 } : {}),
-    city: address.city,
+    name: address.contactName.trim(),
+    address1: address.address1.trim(),
+    city: address.city.trim(),
     province_code: address.region.trim().toUpperCase(),
-    postal_code: address.postalCode.trim().toUpperCase().replace(/^([A-Z]\\d[A-Z])\\s*(\\d[A-Z]\\d)$/, '$1 $2'),
-    country_code: address.countryCode.trim().toUpperCase(),
-    ...(address.phone ? { phone: address.phone } : {}),
-    ...(address.email ? { email: address.email } : {}),
-    is_residential: address.residential ?? false
+    postal_code: postalCode,
+    country_code: country
   }
 }
 
@@ -32,13 +32,13 @@ function stallionPackage(parcel: Package) {
 }
 
 export function toStallionRateRequest(
-  sender: CanonicalAddress,
+  _sender: CanonicalAddress,
   recipient: CanonicalAddress,
   packages: Package[]
 ) {
   return {
-    // Pass the origin supplied in SigmaShip as well as the destination.
-    from_address: stallionAddress(sender),
+    // Stateless Stallion rates use the account origin; sender stays in SigmaShip.
+    // Do not send undocumented origin fields to POST /rates.
     to_address: stallionAddress(recipient),
     packages: packages.map(stallionPackage),
     timeout: 20
@@ -93,11 +93,7 @@ export async function getStallionRates(
     if (error instanceof StallionApiError && error.status === 422) {
       // This is a read-only alternative endpoint: it never creates a shipment.
       // The estimate endpoint uses the account origin, as in Stallion's UI.
-      const estimateRequest = {
-        to_address: request.to_address,
-        packages: request.packages,
-        timeout: request.timeout
-      }
+      const estimateRequest = request
       console.info('[stallion] Trying alternative stateless rate estimate endpoint')
       try {
         const estimate = await client.estimateRates<StallionRate[]>(estimateRequest)
