@@ -130,7 +130,7 @@ export default defineEventHandler(async (event) => {
     .insert(packageRows)
 
   if (packageError) {
-    await carrier.cancelLabel?.(purchased.trackingNumber)
+    await carrier?.cancelLabel?.(purchased.trackingNumber)
     await service.from('shipments').delete().eq('id', shipmentId)
 
     throw createError({
