@@ -14,17 +14,26 @@ export default defineEventHandler(async (event) => {
   const service = serverSupabaseServiceRole<Database>(event)
 
   const { data: organization, error: organizationError } = await service.from('organizations').select('markup_percent,markup_fixed').eq('id', organizationId).single()
-  if (organizationError) throw createError({ statusCode: 500, statusMessage: 'Unable to load customer pricing.' })
+  if (organizationError || !organization) {
+    console.error('[shipping/quotes] Organization pricing lookup failed', { organizationId, code: organizationError?.code, message: organizationError?.message })
+    throw createError({ statusCode: 503, statusMessage: 'Shipping pricing is temporarily unavailable. Please contact support.' })
+  }
 
-  const carrierRates = process.env.STALLION_TOKEN
-    ? await getStallionRates(body.sender, body.recipient, body.packages)
-    : await getSandboxCarrier().getRates({
-        organizationId,
-        sender: body.sender,
-        recipient: body.recipient,
-        packages: body.packages,
-        currency: body.currency.toUpperCase()
-      })
+  let carrierRates
+  try {
+    carrierRates = process.env.STALLION_TOKEN
+      ? await getStallionRates(body.sender, body.recipient, body.packages)
+      : await getSandboxCarrier().getRates({
+          organizationId,
+          sender: body.sender,
+          recipient: body.recipient,
+          packages: body.packages,
+          currency: body.currency.toUpperCase()
+        })
+  } catch (error) {
+    console.error('[shipping/quotes] Carrier quote failed', error)
+    throw createError({ statusCode: 502, statusMessage: 'The carrier could not return rates. Please try again shortly.' })
+  }
 
   const expiresAt = new Date(
     Date.now() + QUOTE_LIFETIME_MINUTES * 60_000
@@ -54,9 +63,10 @@ export default defineEventHandler(async (event) => {
     .select('id, provider, service_code, service_name, customer_price, currency, transit_days, estimated_delivery, expires_at')
 
   if (error) {
+    console.error('[shipping/quotes] Rate persistence failed', { code: error.code, message: error.message, organizationId })
     throw createError({
-      statusCode: 500,
-      statusMessage: 'Unable to save carrier rates.'
+      statusCode: 503,
+      statusMessage: 'Rates were returned but could not be saved. Please contact support.'
     })
   }
 
