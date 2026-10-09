@@ -23,6 +23,13 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (quote.shipment_id) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'This quote has already been used to create a shipment. View the existing shipment instead of purchasing another label.'
+    })
+  }
+
   if (new Date(quote.expires_at).getTime() <= Date.now()) {
     throw createError({
       statusCode: 409,
