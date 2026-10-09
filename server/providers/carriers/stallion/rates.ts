@@ -3,18 +3,14 @@ import type { CarrierRate } from '#shared/contracts/carrier'
 import { configuredStallionClient } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
+  // Only include the documented minimum fields for stateless parcel quotes.
   return {
     name: address.contactName,
-    company: address.company,
     address1: address.address1,
-    address2: address.address2,
     city: address.city,
     province_code: address.region,
-    postal_code: address.postalCode,
-    country_code: address.countryCode,
-    phone: address.phone,
-    email: address.email,
-    is_residential: address.residential ?? false
+    postal_code: address.postalCode.replace(/\s+/g, '').toUpperCase(),
+    country_code: address.countryCode.toUpperCase()
   }
 }
 
@@ -40,7 +36,8 @@ export function toStallionRateRequest(
     // Stallion parcel rates use the account origin; retain sender in SigmaShip
     // for shipment records and carriers that support explicit origins.
     to_address: stallionAddress(recipient),
-    packages: packages.map(stallionPackage)
+    packages: packages.map(stallionPackage),
+    timeout: 20
   }
 }
 
