@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
   const { data, error } = await service
     .from('rate_quotes')
     .insert(quoteRows)
-    .select('id, provider, service_code, service_name, customer_price, currency, transit_days, estimated_delivery, expires_at')
+    .select('id, provider, service_code, service_name, carrier_cost, markup_amount, customer_price, currency, transit_days, estimated_delivery, expires_at')
 
   if (error) {
     console.error('[shipping/quotes] Rate persistence failed', { code: error.code, message: error.message, organizationId })
@@ -89,6 +89,8 @@ export default defineEventHandler(async (event) => {
       serviceCode: quote.service_code,
       serviceName: quote.service_name,
       customerPrice: Number(quote.customer_price),
+      carrierCost: Number(quote.carrier_cost),
+      markupAmount: Number(quote.markup_amount),
       currency: quote.currency,
       transitDays: quote.transit_days,
       estimatedDelivery: quote.estimated_delivery,
