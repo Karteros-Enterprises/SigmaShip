@@ -2,6 +2,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import { quoteRequestSchema } from '#shared/schemas/shipping'
 import type { Database } from '~/types/database.types'
 import { getSandboxCarrier } from '../../utils/carrier'
+import { StallionApiError } from '../../providers/carriers/stallion/client'
 import { getStallionRates } from '../../providers/carriers/stallion/rates'
 import { requireShippingContext } from '../../utils/shipping-context'
 import { priceCarrierRate } from '../../services/pricing'
@@ -37,7 +38,13 @@ export default defineEventHandler(async (event) => {
         })
   } catch (error) {
     console.error('[shipping/quotes] Carrier quote failed', error)
-    throw createError({ statusCode: 502, statusMessage: 'The carrier could not return rates. Please try again shortly.' })
+    if (error instanceof StallionApiError && (error.status === 401 || error.status === 403)) {
+      throw createError({
+        statusCode: 502,
+        message: 'Stallion Express rejected the API token. Verify STALLION_TOKEN matches STALLION_BASE_URL in Vercel and redeploy.'
+      })
+    }
+    throw createError({ statusCode: 502, message: 'The carrier could not return rates. Please try again shortly.' })
   }
 
   const expiresAt = new Date(
