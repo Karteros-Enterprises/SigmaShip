@@ -30,10 +30,22 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  if (quote.provider === 'stallion') {
+    console.warn('[shipping/shipments] Stallion purchase blocked: carrier booking and label workflow not implemented', {
+      quoteId: quote.id,
+      serviceCode: quote.service_code,
+      environment: process.env.STALLION_BASE_URL?.includes('sandbox') ? 'sandbox' : 'production'
+    })
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Stallion rates are available, but purchasing Stallion labels is not yet enabled. No shipment was created or charged.'
+    })
+  }
+
   if (quote.provider !== 'sandbox') {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Unsupported carrier provider.'
+      statusMessage: 'This shipping provider does not support label purchase yet.'
     })
   }
 
