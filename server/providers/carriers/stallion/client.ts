@@ -87,6 +87,22 @@ export function createStallionClient(options: StallionClientOptions) {
         const errorCode = typeof nested.code === 'string' && /^[a-zA-Z0-9_.-]{1,80}$/.test(nested.code)
           ? nested.code : 'unknown'
         if (response.status === 422) {
+          // Log only structural diagnostics, never the address, token or
+          // provider's free-text error message (which can contain PII).
+          const submitted = body && typeof body === 'object' && !Array.isArray(body)
+            ? body as Record<string, unknown> : {}
+          const parcels = Array.isArray(submitted.packages) ? submitted.packages : []
+          console.error('[stallion] Rate request diagnostics', {
+            endpoint: path,
+            environment: isProduction ? 'production' : 'sandbox',
+            requestKeys: Object.keys(submitted).sort(),
+            packageCount: parcels.length,
+            packageKeys: parcels.length && parcels[0] && typeof parcels[0] === 'object'
+              ? Object.keys(parcels[0] as Record<string, unknown>).sort() : [],
+            destinationKeys: submitted.to_address && typeof submitted.to_address === 'object'
+              ? Object.keys(submitted.to_address as Record<string, unknown>).sort() : [],
+            requestId: response.headers.get('x-request-id') || response.headers.get('x-correlation-id') || undefined
+          })
           // Never log arbitrary API messages: they may echo personal address data.
           console.error('[stallion] Validation rejected request', {
             code: errorCode,
