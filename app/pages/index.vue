@@ -11,6 +11,12 @@ const errorMessage = ref('')
 
 onMounted(async () => {
   const code = typeof route.query.code === 'string' ? route.query.code : ''
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const recovery = route.query.type === 'recovery' || hash.get('type') === 'recovery' || route.query.next === 'reset-password'
+  if (recovery) {
+    await navigateTo({ path: '/reset-password', query: code ? { code } : {} }, { replace: true })
+    return
+  }
 
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
