@@ -1,6 +1,6 @@
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
-import { configuredStallionClient, StallionApiError } from './client'
+import { configuredStallionClient } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
   // Only include the documented minimum fields for stateless parcel quotes.
@@ -81,31 +81,8 @@ export async function getStallionRates(
   packages: Package[]
 ) {
   const client = configuredStallionClient()
-  const payload = toStallionRateRequest(sender, recipient, packages)
-  try {
-    const response = await client.quoteRates<StallionRate[]>(payload)
-    return mapStallionRates(response.data)
-  } catch (error) {
-    // Shipment creation persists data. Never silently create a production
-    // shipment while the user is only requesting a quote.
-    if (!(error instanceof StallionApiError) || error.status !== 422) {
-      throw error
-    }
-    if (process.env.STALLION_SHIPMENT_RATE_DIAGNOSTIC !== 'true') throw error
-    if (client.environment !== 'sandbox') {
-      console.warn('[stallion] Shipment rate diagnostic skipped: production writes are prohibited')
-      throw error
-    }
-    console.info('[stallion] Comparing sandbox shipment-based rate workflow')
-    const created = await client.createShipment<{ id: string }>(
-      { ...payload, type: 'courier' },
-      crypto.randomUUID()
-    )
-    if (!created.data?.id) throw new Error('Stallion sandbox shipment response did not include an id.')
-    const rated = await client.getShipmentRates<StallionRate[]>(created.data.id)
-    console.info('[stallion] Sandbox shipment rate diagnostic completed', {
-      rateCount: Array.isArray(rated.data) ? rated.data.length : null
-    })
-    return mapStallionRates(rated.data)
-  }
+  const response = await client.quoteRates<StallionRate[]>(
+    toStallionRateRequest(sender, recipient, packages)
+  )
+  return mapStallionRates(response.data)
 }
