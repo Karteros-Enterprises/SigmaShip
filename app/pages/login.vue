@@ -94,7 +94,7 @@ async function signIn() {
       </UForm>
 
       <p class="auth-switch">
-        New to SigmaShip?
+        <NuxtLink to="/forgot-password">Forgot password?</NuxtLink><br>New to SigmaShip?
         <NuxtLink to="/register">Create an account</NuxtLink>
       </p>
     </section>
