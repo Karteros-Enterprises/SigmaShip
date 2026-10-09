@@ -163,6 +163,15 @@ function shipmentPayload() {
 }
 
 async function compareRates() {
+  if (!sender.region || !recipient.region) {
+    toast.add({
+      title: 'Province / State required',
+      description: 'Select a province or state for both sender and recipient before comparing rates.',
+      color: 'warning',
+      icon: 'i-lucide-map-pin'
+    })
+    return
+  }
   purchasedShipment.value = null
   selectedQuoteId.value = ''
   quoting.value = true
