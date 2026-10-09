@@ -1589,3 +1589,54 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
   .shipment-form-stack .address-pair { grid-template-columns: 1fr; gap: 20px; }
   .shipment-form-stack .address-pair .address-swap { top: 50%; transform: translate(-50%,-50%); }
 }
+
+
+/* Ship address cards: nested Nuxt UI cards must use the light form surface.
+   The address-pair wrapper is a layout container, not a dark card. */
+.shipment-form-stack > .address-pair {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+.shipment-form-stack .address-pair > :not(.address-swap) {
+  min-width: 0;
+  border: 1px solid var(--sigma-line) !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  color: var(--sigma-ink) !important;
+  box-shadow: none !important;
+}
+.shipment-form-stack .address-pair .card-heading h2,
+.shipment-form-stack .address-pair .placeholder-grid label,
+.shipment-form-stack .address-pair [data-slot="label"] {
+  color: var(--sigma-ink) !important;
+}
+.shipment-form-stack .address-pair .eyebrow { color: var(--sigma-muted) !important; }
+.shipment-form-stack .address-pair .address-swap {
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-color: #0b0c0f !important;
+  background: var(--sigma-accent) !important;
+  color: var(--sigma-ink) !important;
+  font-weight: 750;
+  white-space: nowrap;
+}
+.shipment-form-stack .address-pair input,
+.shipment-form-stack .address-pair select,
+.shipment-form-stack .address-pair button[role="combobox"] {
+  background: #fff !important;
+  color: var(--sigma-ink) !important;
+  -webkit-text-fill-color: var(--sigma-ink) !important;
+}
+.shipment-form-stack .address-pair input:-webkit-autofill {
+  -webkit-text-fill-color: var(--sigma-ink) !important;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+}
+@media (max-width: 780px) {
+  .shipment-form-stack .address-pair .address-swap {
+    top: 50%;
+    left: 50%;
+  }
+}
