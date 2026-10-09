@@ -37,7 +37,6 @@ export function toStallionRateRequest(
   packages: Package[]
 ) {
   return {
-    type: 'courier',
     from_address: stallionAddress(sender),
     to_address: stallionAddress(recipient),
     packages: packages.map(stallionPackage)
