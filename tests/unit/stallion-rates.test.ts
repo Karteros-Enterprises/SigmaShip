@@ -20,7 +20,7 @@ describe('Stallion rate mapping', () => {
       height: 5,
       dimensionUnit: 'cm'
     }])
-    expect(body.type).toBe('courier')
+    expect(body).not.toHaveProperty('type')
     expect(body.to_address.province_code).toBe('ON')
     expect(body.packages[0]?.weight).toBeCloseTo(2.205)
     expect(body.packages[0]?.length).toBe(10)
