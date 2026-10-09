@@ -10,7 +10,7 @@ export const addressSchema = z.object({
   postalCode: z.string().trim().min(3).max(20),
   countryCode: z.string().trim().length(2).transform((value) => value.toUpperCase()),
   phone: z.string().trim().max(30).optional(),
-  email: z.string().email().optional(),
+  // Empty optional contact emails are sent as '' by the shipping form.\n  email: z.union([z.email(), z.literal('')]).optional().transform(value => value || undefined),
   residential: z.boolean().optional()
 })
 
