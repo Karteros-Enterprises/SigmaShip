@@ -15,7 +15,8 @@ export interface StallionEnvelope<T> {
 export class StallionApiError extends Error {
   constructor(
     public readonly status: number,
-    message: string
+    message: string,
+    public readonly validationFields: string[] = []
   ) {
     super(message)
     this.name = 'StallionApiError'
@@ -71,9 +72,20 @@ export function createStallionClient(options: StallionClientOptions) {
       })
       const payload: unknown = await response.json().catch(() => null)
       if (!response.ok) {
+        // Only report field names, never submitted addresses or credentials.
+        const errorPayload = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {}
+        const errors = errorPayload.errors
+        const fields = errors && typeof errors === 'object' && !Array.isArray(errors)
+          ? Object.keys(errors).slice(0, 20)
+          : []
+        const validationFields = fields.filter(field => /^[a-zA-Z0-9_.\[\]-]{1,100}$/.test(field))
+        if (response.status === 422) {
+          console.error('[stallion] Validation rejected request; fields:', validationFields.length ? validationFields : '(not provided by API)')
+        }
         throw new StallionApiError(
           response.status,
-          `Stallion request failed (HTTP ${response.status}).`
+          `Stallion request failed (HTTP ${response.status})${validationFields.length ? `: invalid fields: ${validationFields.join(', ')}` : ''}.`,
+          validationFields
         )
       }
       if (!payload || typeof payload !== 'object' || !('data' in payload)) {
