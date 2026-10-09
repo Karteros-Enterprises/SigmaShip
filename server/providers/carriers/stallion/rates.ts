@@ -1,16 +1,20 @@
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
-import { configuredStallionClient, StallionApiError } from './client'
+import { configuredStallionClient } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
-  // Only include the documented minimum fields for stateless parcel quotes.
   return {
     name: address.contactName,
+    ...(address.company ? { company: address.company } : {}),
     address1: address.address1,
+    ...(address.address2 ? { address2: address.address2 } : {}),
     city: address.city,
-    province_code: address.region,
-    postal_code: address.postalCode.trim().toUpperCase().replace(/^([A-Z]\d[A-Z])\s*(\d[A-Z]\d)$/, '$1 $2'),
-    country_code: address.countryCode.toUpperCase()
+    province_code: address.region.trim().toUpperCase(),
+    postal_code: address.postalCode.trim().toUpperCase().replace(/^([A-Z]\\d[A-Z])\\s*(\\d[A-Z]\\d)$/, '$1 $2'),
+    country_code: address.countryCode.trim().toUpperCase(),
+    ...(address.phone ? { phone: address.phone } : {}),
+    ...(address.email ? { email: address.email } : {}),
+    is_residential: address.residential ?? false
   }
 }
 
@@ -81,34 +85,8 @@ export async function getStallionRates(
   packages: Package[]
 ) {
   const client = configuredStallionClient()
-  const request = toStallionRateRequest(sender, recipient, packages)
-  try {
-    const response = await client.quoteRates<StallionRate[]>(request)
-    return mapStallionRates(response.data)
-  } catch (error) {
-    if (error instanceof StallionApiError && error.status === 422) {
-      // Controlled read-only alternative: remove optional parcel metadata.
-      // Previous diagnostics already established that the basic request fails.
-      const alternative = {
-        to_address: request.to_address,
-        packages: request.packages.map(parcel => ({
-          weight: parcel.weight,
-          weight_unit: parcel.weight_unit,
-          package_contents: parcel.package_contents
-        }))
-      }
-      console.info('[stallion] Retrying documented minimal rate request with package contents')
-      try {
-        const response = await client.quoteRates<StallionRate[]>(alternative)
-        console.info('[stallion] Alternative rate request succeeded')
-        return mapStallionRates(response.data)
-      } catch (retryError) {
-        if (retryError instanceof StallionApiError) {
-          console.warn('[stallion] Alternative rate request failed', { status: retryError.status })
-        }
-        throw error
-      }
-    }
-    throw error
-  }
+  const response = await client.quoteRates<StallionRate[]>(
+    toStallionRateRequest(sender, recipient, packages)
+  )
+  return mapStallionRates(response.data)
 }
