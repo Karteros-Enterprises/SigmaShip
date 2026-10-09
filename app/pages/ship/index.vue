@@ -14,6 +14,8 @@ interface QuoteOption {
   serviceCode: string
   serviceName: string
   customerPrice: number
+  carrierCost: number
+  markupAmount: number
   currency: string
   transitDays: number | null
   estimatedDelivery: string | null
@@ -138,6 +140,7 @@ const parcel = reactive<Package>({
 
 const quotes = ref<QuoteOption[]>([])
 const selectedQuoteId = ref('')
+const expandedPriceId = ref<string | null>(null)
 const purchasedShipment = ref<PurchasedShipment | null>(null)
 const quoting = ref(false)
 const purchasing = ref(false)
@@ -192,6 +195,7 @@ async function compareRates() {
   }
   purchasedShipment.value = null
   selectedQuoteId.value = ''
+  expandedPriceId.value = null
   quoting.value = true
 
   try {
@@ -425,29 +429,48 @@ function money(amount: number, currency: string) {
               <p class="eyebrow">04 / COMPARE</p>
               <h2>Choose a service</h2>
             </div>
-            <span>{{ quotes.length }} live sandbox rates</span>
+            <span>{{ quotes.length }} available rates</span>
           </div>
 
-          <button
+          <div
             v-for="quote in quotes"
             :key="quote.id"
-            type="button"
             class="rate-card"
             :class="{ selected: selectedQuoteId === quote.id }"
-            @click="selectedQuoteId = quote.id"
           >
-            <span class="rate-radio" />
-            <span class="rate-service">
-              <strong>{{ quote.serviceName }}</strong>
-              <small>
-                {{ quote.transitDays ? `${quote.transitDays} business day${quote.transitDays === 1 ? '' : 's'}` : 'Transit calculated by carrier' }}
-              </small>
-            </span>
+            <button
+              type="button"
+              class="rate-choice"
+              :aria-pressed="selectedQuoteId === quote.id"
+              @click="selectedQuoteId = quote.id"
+            >
+              <span class="rate-radio" />
+              <span class="rate-service">
+                <strong>{{ quote.serviceName }}</strong>
+                <small>{{ quote.transitDays ? `${quote.transitDays} business day${quote.transitDays === 1 ? '' : 's'}` : 'Transit calculated by carrier' }}</small>
+              </span>
+            </button>
             <span class="rate-price">
               <strong>{{ money(quote.customerPrice, quote.currency) }}</strong>
               <small>{{ quote.currency }}</small>
+              <button
+                type="button"
+                class="rate-price-info"
+                :aria-label="`Show price breakdown for ${quote.serviceName}`"
+                :aria-expanded="expandedPriceId === quote.id"
+                @click.stop="expandedPriceId = expandedPriceId === quote.id ? null : quote.id"
+              >
+                <UIcon name="i-lucide-info" />
+                <span>Price details</span>
+              </button>
             </span>
-          </button>
+            <div v-if="expandedPriceId === quote.id" class="rate-breakdown">
+              <div><span>Carrier shipping rate</span><strong>{{ money(quote.carrierCost, quote.currency) }}</strong></div>
+              <div><span>SigmaShip service markup</span><strong>{{ money(quote.markupAmount, quote.currency) }}</strong></div>
+              <div class="rate-breakdown-total"><span>Quoted total</span><strong>{{ money(quote.customerPrice, quote.currency) }}</strong></div>
+              <small>Taxes, duties and carrier adjustments, if applicable, are not separately included in this quote.</small>
+            </div>
+          </div>
 
           <UButton
             v-if="selectedQuote"
@@ -516,3 +539,13 @@ function money(amount: number, currency: string) {
     </div>
   </div>
 </template>
+
+<style scoped>
+.rate-choice { display: flex; flex: 1; min-width: 0; align-items: center; gap: 0.75rem; text-align: left; background: transparent; border: 0; cursor: pointer; color: inherit; }
+.rate-price-info { display: inline-flex; align-items: center; justify-content: flex-end; gap: .3rem; padding: .3rem 0; background: none; border: 0; color: var(--ui-primary); cursor: pointer; font-size: .78rem; }
+.rate-price-info:focus-visible, .rate-choice:focus-visible { outline: 2px solid var(--ui-primary); outline-offset: 3px; }
+.rate-breakdown { flex-basis: 100%; width: 100%; padding: .8rem 0 .2rem; border-top: 1px solid var(--ui-border); display: grid; gap: .4rem; }
+.rate-breakdown > div { display: flex; justify-content: space-between; gap: 1rem; }
+.rate-breakdown-total { padding-top: .5rem; border-top: 1px solid var(--ui-border); }
+.rate-breakdown > small { opacity: .75; line-height: 1.4; }
+</style>
