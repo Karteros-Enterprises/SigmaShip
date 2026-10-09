@@ -12,13 +12,21 @@ export async function requireShippingContext(event: H3Event) {
     })
   }
 
+  // serverSupabaseUser returns verified JWT claims (with `sub`), not
+  // necessarily a Supabase User object (with `id`).
+  const userId = user.sub
+  if (typeof userId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)) {
+    console.error('[shipping/context] Authenticated session has no valid subject UUID')
+    throw createError({ statusCode: 401, message: 'Your session is invalid. Please sign in again.' })
+  }
+
   // Authenticated user ID comes from Supabase Auth; use the service client for
   // the membership lookup so an RLS/read error cannot masquerade as no workspace.
   const service = serverSupabaseServiceRole<Database>(event)
   const { data: membership, error } = await service
     .from('memberships')
     .select('organization_id')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .limit(1)
     .maybeSingle()
 
