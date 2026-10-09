@@ -1787,3 +1787,33 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
   .shipment-overview { top: 66px; }
   .shipment-overview .overview-step { min-width: 105px; }
 }
+
+/* Responsive ship layout: override earlier competing breakpoints. */
+@media (max-width: 1250px) {
+  .portal-workspace, .shipment-layout, .shipment-form-stack, .shipment-overview { min-width: 0 !important; }
+  .shipment-layout { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+  .shipment-form-stack { width: 100% !important; }
+  .shipment-overview { order: -1 !important; width: 100% !important; max-width: 100% !important; position: sticky !important; top: 66px !important; z-index: 8; }
+  .shipment-overview > div { width: 100% !important; max-width: 100% !important; }
+  .shipment-overview .overview-steps { display: grid !important; grid-template-columns: repeat(6, minmax(0, 1fr)) !important; overflow: hidden !important; gap: 6px !important; }
+  .shipment-overview .overview-step { display: flex !important; min-width: 0 !important; max-width: none !important; padding: 5px 0 !important; align-items: center !important; }
+  .shipment-overview .overview-step > span { flex: 0 0 23px; width: 23px; height: 23px; }
+  .shipment-overview .overview-step strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px !important; }
+  .shipment-overview .overview-step p { display: none !important; }
+}
+@media (max-width: 780px) {
+  .shipment-form-stack .address-pair { display: grid !important; grid-template-columns: minmax(0,1fr) !important; gap: 18px !important; }
+  .shipment-form-stack .address-pair > :not(.address-swap) { width: 100% !important; min-width: 0 !important; }
+  .shipment-form-stack .address-pair .placeholder-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .shipment-form-stack .address-pair .address-swap { top: 50% !important; }
+  .shipment-overview .overview-steps { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+  .shipment-overview .overview-step { justify-content: center !important; }
+  .shipment-overview .overview-step > div { display: none !important; }
+  .shipment-overview h2 { font-size: 13px !important; }
+}
+@media (max-width: 480px) {
+  .shipment-form-stack .address-pair .placeholder-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .shipment-form-stack .address-pair .placeholder-grid > * { grid-column: 1 / -1 !important; min-width: 0 !important; }
+  .shipment-form-stack .address-options { grid-template-columns: 1fr !important; }
+  .package-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
