@@ -1,5 +1,5 @@
 import type { H3Event } from 'h3'
-import { serverSupabaseClient, serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
 import type { Database } from '~/types/database.types'
 
 export async function requireShippingContext(event: H3Event) {
@@ -12,22 +12,30 @@ export async function requireShippingContext(event: H3Event) {
     })
   }
 
-  const supabase = await serverSupabaseClient<Database>(event)
-  const { data: membership, error } = await supabase
+  // Authenticated user ID comes from Supabase Auth; use the service client for
+  // the membership lookup so an RLS/read error cannot masquerade as no workspace.
+  const service = serverSupabaseServiceRole<Database>(event)
+  const { data: membership, error } = await service
     .from('memberships')
     .select('organization_id')
     .eq('user_id', user.id)
     .limit(1)
     .maybeSingle()
 
-  if (error || !membership?.organization_id) {
+  if (error) {
     throw createError({
-      statusCode: 403,
-      statusMessage: 'A ΣigmaSpace is required. Complete account setup before shipping.'
+      statusCode: 503,
+      statusMessage: 'Unable to verify your ΣigmaSpace membership. Please try again.'
     })
   }
 
-  const service = serverSupabaseServiceRole<Database>(event)
+  if (!membership?.organization_id) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Your account has no ΣigmaSpace membership. Complete account setup before shipping.'
+    })
+  }
+
   const { data: organization, error: organizationError } = await service.from('organizations')
     .select('is_active').eq('id', membership.organization_id).maybeSingle()
   if (organizationError || !organization) {
