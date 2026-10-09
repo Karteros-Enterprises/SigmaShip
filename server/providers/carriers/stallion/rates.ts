@@ -1,6 +1,6 @@
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
-import { configuredStallionClient } from './client'
+import { configuredStallionClient, StallionApiError } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
   // Only include the documented minimum fields for stateless parcel quotes.
@@ -81,8 +81,30 @@ export async function getStallionRates(
   packages: Package[]
 ) {
   const client = configuredStallionClient()
-  const response = await client.quoteRates<StallionRate[]>(
-    toStallionRateRequest(sender, recipient, packages)
-  )
-  return mapStallionRates(response.data)
+  const request = toStallionRateRequest(sender, recipient, packages)
+  try {
+    const response = await client.quoteRates<StallionRate[]>(request)
+    return mapStallionRates(response.data)
+  } catch (error) {
+    if (error instanceof StallionApiError && error.status === 422) {
+      // Controlled read-only alternative: remove optional parcel metadata.
+      // Previous diagnostics already established that the basic request fails.
+      const alternative = {
+        to_address: request.to_address,
+        packages: request.packages.map(({ package_contents: _contents, ...parcel }) => parcel)
+      }
+      console.info('[stallion] Retrying rate quote without optional package metadata')
+      try {
+        const response = await client.quoteRates<StallionRate[]>(alternative)
+        console.info('[stallion] Alternative rate request succeeded')
+        return mapStallionRates(response.data)
+      } catch (retryError) {
+        if (retryError instanceof StallionApiError) {
+          console.warn('[stallion] Alternative rate request failed', { status: retryError.status })
+        }
+        throw error
+      }
+    }
+    throw error
+  }
 }
