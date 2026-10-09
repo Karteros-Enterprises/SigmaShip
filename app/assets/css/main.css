@@ -1756,3 +1756,34 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
 @media (max-width: 520px) {
   .shipment-form-stack .address-options { grid-template-columns: 1fr; }
 }
+
+/* Ship form control parity: Nuxt UI select triggers match text inputs. */
+.shipment-form-stack .address-pair [data-slot="base"],
+.shipment-form-stack .address-pair [data-slot="root"],
+.shipment-form-stack .package-grid [data-slot="base"] { min-width: 0; }
+.shipment-form-stack .address-pair :is(input:not([type="checkbox"]), select, button[role="combobox"]),
+.shipment-form-stack .package-grid :is(input:not([type="checkbox"]), select, button[role="combobox"]) {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 42px !important;
+  min-height: 42px !important;
+}
+.shipment-form-stack .address-pair [data-slot="base"] > button,
+.shipment-form-stack .package-grid [data-slot="base"] > button { width: 100%; min-height: 42px; }
+@media (max-width: 1250px) {
+  .shipment-layout { display: flex; flex-direction: column; }
+  .shipment-overview { order: -1; position: sticky; top: 66px; z-index: 8; width: 100%; }
+  .shipment-overview > div { padding: 12px 16px !important; }
+  .shipment-overview .overview-steps { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 3px; }
+  .shipment-overview .overview-step { display: flex; flex: 0 0 auto; min-width: 118px; max-width: 170px; gap: 8px; border: 0; padding: 6px 8px; }
+  .shipment-overview .overview-step > div { min-width: 0; }
+  .shipment-overview .overview-step strong { display: block; font-size: 11px; white-space: nowrap; }
+  .shipment-overview .overview-step p { display: none; }
+  .shipment-overview .card-heading, .shipment-overview [data-slot="header"] { padding-bottom: 8px !important; }
+  .shipment-overview h2 { font-size: 15px; }
+  .shipment-overview .eyebrow { font-size: 9px; }
+}
+@media (max-width: 780px) {
+  .shipment-overview { top: 66px; }
+  .shipment-overview .overview-step { min-width: 105px; }
+}
