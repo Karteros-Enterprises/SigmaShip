@@ -234,6 +234,10 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      sigma_space_availability: {
+        Args: { candidate_name: string; candidate_slug: string }
+        Returns: { name_available: boolean; slug_available: boolean }[]
+      }
       create_organization: {
         Args: {
           organization_name: string
