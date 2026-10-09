@@ -44,6 +44,24 @@ const stateOptions = [
   ...'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(' ').map(value => ({ label: value, value }))
 ]
 const addressOptions = (country: string) => country === 'US' ? stateOptions : provinceOptions
+const provinceAliases: Record<string, string> = {
+  ontario: 'ON', quebec: 'QC', 'québec': 'QC', alberta: 'AB',
+  'british columbia': 'BC', manitoba: 'MB', saskatchewan: 'SK',
+  'nova scotia': 'NS', 'new brunswick': 'NB',
+  'newfoundland and labrador': 'NL', 'prince edward island': 'PE',
+  yukon: 'YT', 'northwest territories': 'NT', nunavut: 'NU'
+}
+function syncAutofilledRegion(which: 'sender' | 'recipient', event: Event) {
+  const address = which === 'sender' ? sender : recipient
+  const field = event.target as HTMLInputElement
+  const raw = field.value.trim()
+  if (!raw) return
+  const code = provinceAliases[raw.toLowerCase()] ?? raw.toUpperCase()
+  if (addressOptions(address.countryCode).some(option => option.value === code)) {
+    address.region = code
+  }
+}
+
 const senderExtras = reactive({ reference: '', poBox: false, notifications: false, save: false, search: '' })
 const recipientExtras = reactive({ reference: '', poBox: false, notifications: false, save: false, search: '' })
 const addressBook = ref<{ label: string, address: CanonicalAddress }[]>([])
@@ -273,6 +291,7 @@ function money(amount: number, currency: string) {
             </UFormField>
             <UFormField label="Province / State">
               <USelect v-model="sender.region" class="w-full" :items="addressOptions(sender.countryCode)" placeholder="Select province / state" required />
+              <input class="browser-region-autofill" :name="`shipping-${'sender'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('sender', $event)" @change="syncAutofilledRegion('sender', $event)" />
             </UFormField>
             <UFormField label="City">
               <UInput v-model="sender.city" class="w-full" required />
@@ -325,6 +344,7 @@ function money(amount: number, currency: string) {
             </UFormField>
             <UFormField label="Province / State">
               <USelect v-model="recipient.region" class="w-full" :items="addressOptions(recipient.countryCode)" placeholder="Select province / state" required />
+              <input class="browser-region-autofill" :name="`shipping-${'recipient'}-region`" autocomplete="address-level1" aria-label="Autofill province or state" tabindex="-1" @input="syncAutofilledRegion('recipient', $event)" @change="syncAutofilledRegion('recipient', $event)" />
             </UFormField>
             <UFormField label="City">
               <UInput v-model="recipient.city" class="w-full" required />
