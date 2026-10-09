@@ -1817,3 +1817,16 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
   .shipment-form-stack .address-options { grid-template-columns: 1fr !important; }
   .package-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
 }
+
+/* Browser autofill bridge for custom province/state dropdowns. */
+.shipment-form-stack .browser-region-autofill {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
