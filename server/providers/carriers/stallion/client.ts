@@ -78,7 +78,7 @@ export function createStallionClient(options: StallionClientOptions) {
         const fields = errors && typeof errors === 'object' && !Array.isArray(errors)
           ? Object.keys(errors).slice(0, 20)
           : []
-        const validationFields = fields.filter(field => /^[a-zA-Z0-9_.\[\]-]{1,100}$/.test(field))
+        const validationFields = fields.filter(field => /^[a-zA-Z0-9_.[\]-]{1,100}$/.test(field))
         if (response.status === 422) {
           console.error('[stallion] Validation rejected request; fields:', validationFields.length ? validationFields : '(not provided by API)')
         }
