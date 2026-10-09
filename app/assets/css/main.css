@@ -1680,3 +1680,38 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
     top: 50% !important;
   }
 }
+
+/* Mockup-inspired icon-only address switch, centered in the gutter. */
+.shipment-form-stack .address-pair .address-swap {
+  top: 38px !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 3px solid #f5f4ef !important;
+  border-radius: 50% !important;
+  background: #c5ff36 !important;
+  color: #101410 !important;
+  box-shadow: 0 1px 5px rgba(0,0,0,.13) !important;
+  font-size: 0 !important;
+  z-index: 3;
+}
+.shipment-form-stack .address-pair .address-swap:hover {
+  background: #b5ed26 !important;
+  transform: translate(-50%, -50%) scale(1.05) !important;
+}
+.shipment-form-stack .address-pair .address-swap svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+@media (max-width: 780px) {
+  .shipment-form-stack .address-pair .address-swap {
+    top: 50% !important;
+  }
+}
