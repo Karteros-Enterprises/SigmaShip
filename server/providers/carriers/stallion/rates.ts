@@ -1,6 +1,6 @@
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
-import { configuredStallionClient } from './client'
+import { configuredStallionClient, StallionApiError } from './client'
 
 function stallionAddress(address: CanonicalAddress) {
   return {
@@ -85,8 +85,29 @@ export async function getStallionRates(
   packages: Package[]
 ) {
   const client = configuredStallionClient()
-  const response = await client.quoteRates<StallionRate[]>(
-    toStallionRateRequest(sender, recipient, packages)
-  )
-  return mapStallionRates(response.data)
+  const request = toStallionRateRequest(sender, recipient, packages)
+  try {
+    const response = await client.quoteRates<StallionRate[]>(request)
+    return mapStallionRates(response.data)
+  } catch (error) {
+    if (error instanceof StallionApiError && error.status === 422) {
+      // This is a read-only alternative endpoint: it never creates a shipment.
+      // The estimate endpoint uses the account origin, as in Stallion's UI.
+      const estimateRequest = {
+        to_address: request.to_address,
+        packages: request.packages,
+        timeout: request.timeout
+      }
+      console.info('[stallion] Trying alternative stateless rate estimate endpoint')
+      try {
+        const estimate = await client.estimateRates<StallionRate[]>(estimateRequest)
+        return mapStallionRates(estimate.data)
+      } catch (estimateError) {
+        console.warn('[stallion] Estimate endpoint failed', {
+          status: estimateError instanceof StallionApiError ? estimateError.status : 'unknown'
+        })
+      }
+    }
+    throw error
+  }
 }
