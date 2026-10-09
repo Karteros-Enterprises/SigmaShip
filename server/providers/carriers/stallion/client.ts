@@ -74,13 +74,25 @@ export function createStallionClient(options: StallionClientOptions) {
       if (!response.ok) {
         // Only report field names, never submitted addresses or credentials.
         const errorPayload = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {}
-        const errors = errorPayload.errors
+        // V5 errors are nested under { error: { code, message, details } }.
+        const nested = errorPayload.error && typeof errorPayload.error === 'object'
+          ? errorPayload.error as Record<string, unknown>
+          : {}
+        const details = nested.details
+        const errors = details && typeof details === 'object' ? details : errorPayload.errors
         const fields = errors && typeof errors === 'object' && !Array.isArray(errors)
           ? Object.keys(errors).slice(0, 20)
           : []
-        const validationFields = fields.filter(field => /^[a-zA-Z0-9_.[\]-]{1,100}$/.test(field))
+        const validationFields = fields.filter(field => /^[a-zA-Z0-9_.-]{1,100}$/.test(field))
+        const errorCode = typeof nested.code === 'string' && /^[a-zA-Z0-9_.-]{1,80}$/.test(nested.code)
+          ? nested.code : 'unknown'
         if (response.status === 422) {
-          console.error('[stallion] Validation rejected request; fields:', validationFields.length ? validationFields : '(not provided by API)')
+          // Never log arbitrary API messages: they may echo personal address data.
+          console.error('[stallion] Validation rejected request', {
+            code: errorCode,
+            detailType: Array.isArray(details) ? 'array' : typeof details,
+            fields: validationFields.length ? validationFields : '(not provided by API)'
+          })
         }
         throw new StallionApiError(
           response.status,
