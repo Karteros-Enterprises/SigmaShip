@@ -88,7 +88,9 @@ export async function getStallionRates(
   } catch (error) {
     // Shipment creation persists data. Never silently create a production
     // shipment while the user is only requesting a quote.
-    if (!(error instanceof StallionApiError) || error.status !== 422) throw error
+    if (!(error instanceof StallionApiError) || error.status !== 422) {
+      throw error
+    }
     if (process.env.STALLION_SHIPMENT_RATE_DIAGNOSTIC !== 'true') throw error
     if (client.environment !== 'sandbox') {
       console.warn('[stallion] Shipment rate diagnostic skipped: production writes are prohibited')
