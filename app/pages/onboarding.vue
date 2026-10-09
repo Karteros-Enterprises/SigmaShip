@@ -16,6 +16,31 @@ const slugTouched = ref(false)
 const submitting = ref(false)
 const errorMessage = ref('')
 const checkingWorkspace = ref(true)
+const nameAvailable = ref<boolean | null>(null)
+const slugAvailable = ref<boolean | null>(null)
+const checkingAvailability = ref(false)
+let availabilitySequence = 0
+async function checkAvailability() {
+  const name = organizationName.value.trim()
+  const slug = slugify(organizationSlug.value)
+  const sequence = ++availabilitySequence
+  nameAvailable.value = null
+  slugAvailable.value = null
+  if (!name || !slug) return
+  checkingAvailability.value = true
+  const { data, error } = await supabase.rpc('sigma_space_availability', { candidate_name: name, candidate_slug: slug })
+  if (sequence !== availabilitySequence) return
+  checkingAvailability.value = false
+  if (error) return
+  const result = Array.isArray(data) ? data[0] : data
+  nameAvailable.value = result?.name_available ?? null
+  slugAvailable.value = result?.slug_available ?? null
+}
+let availabilityTimer: ReturnType<typeof setTimeout> | undefined
+watch([organizationName, organizationSlug], () => {
+  clearTimeout(availabilityTimer)
+  availabilityTimer = setTimeout(checkAvailability, 400)
+})
 
 onMounted(async () => {
   const { data: authData, error: authError } = await supabase.auth.getUser()
@@ -84,6 +109,11 @@ async function createWorkspace() {
     return
   }
 
+  await checkAvailability()
+  if (nameAvailable.value === false || slugAvailable.value === false) {
+    errorMessage.value = 'That ΣigmaSpace name or ID is already in use. Choose another.'
+    return
+  }
   submitting.value = true
 
   try {
@@ -98,7 +128,7 @@ async function createWorkspace() {
         return
       }
 
-      errorMessage.value = error.message
+      errorMessage.value = error.code === '23505' ? 'That ΣigmaSpace name or ID is already in use.' : error.message
       return
     }
 
@@ -169,6 +199,10 @@ async function createWorkspace() {
             </div>
           </div>
 
+          <p v-if="checkingAvailability" class="availability-status">Checking name and ID availability…</p>
+          <p v-else-if="nameAvailable === false" class="availability-status availability-error">That company or ΣigmaSpace name is already in use.</p>
+          <p v-else-if="slugAvailable === false" class="availability-status availability-error">That ΣigmaSpace ID is already in use.</p>
+          <p v-else-if="nameAvailable && slugAvailable" class="availability-status availability-success">Name and ID are available.</p>
           <UAlert
             v-if="errorMessage"
             color="error"
@@ -181,7 +215,7 @@ async function createWorkspace() {
             size="xl"
             trailing-icon="i-lucide-arrow-right"
             :loading="submitting || checkingWorkspace"
-            :disabled="submitting || checkingWorkspace"
+            :disabled="submitting || checkingWorkspace || checkingAvailability || nameAvailable === false || slugAvailable === false"
           >
             Enter SigmaShip
           </UButton>
@@ -215,4 +249,8 @@ async function createWorkspace() {
 .onboarding-form button[type=submit]{width:100%;min-height:56px;justify-content:center;border-radius:10px;background:#d8ff3e;color:#0b0c0d;font-size:14px;font-weight:800;box-shadow:none}
 @media(max-width:1050px){.onboarding-grid{grid-template-columns:1fr;gap:44px;padding:70px 0 30px}.onboarding-copy h1{max-width:760px}.onboarding-form{max-width:560px}}
 @media(max-width:640px){.onboarding-page{padding:0}.onboarding-shell{min-height:100vh;padding:26px 20px;border-radius:0}.onboarding-grid{padding:64px 0 24px}.onboarding-copy h1{font-size:clamp(44px,14vw,64px)}.onboarding-form{padding:26px 20px}.onboarding-field-heading{align-items:flex-start;flex-direction:column;gap:4px}}
+</style>
+
+<style scoped>
+.availability-status{font-size:12px;margin:0;color:#555}.availability-error{color:#b42318}.availability-success{color:#237a38}
 </style>
