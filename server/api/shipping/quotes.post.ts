@@ -10,7 +10,12 @@ const QUOTE_LIFETIME_MINUTES = 15
 
 export default defineEventHandler(async (event) => {
   const { organizationId } = await requireShippingContext(event)
-  const body = quoteRequestSchema.parse(await readBody(event))
+  const parsed = quoteRequestSchema.safeParse(await readBody(event))
+  if (!parsed.success) {
+    const fields = parsed.error.issues.map(issue => issue.path.join('.')).join(', ')
+    throw createError({ statusCode: 422, message: `Please correct the shipping form: ${fields}.` })
+  }
+  const body = parsed.data
   const service = serverSupabaseServiceRole<Database>(event)
 
   const { data: organization, error: organizationError } = await service.from('organizations').select('markup_percent,markup_fixed').eq('id', organizationId).single()
