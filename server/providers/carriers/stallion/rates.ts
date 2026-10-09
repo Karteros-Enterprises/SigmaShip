@@ -9,7 +9,7 @@ function stallionAddress(address: CanonicalAddress) {
     address1: address.address1,
     city: address.city,
     province_code: address.region,
-    postal_code: address.postalCode.replace(/\s+/g, '').toUpperCase(),
+    postal_code: address.postalCode.trim().toUpperCase().replace(/^([A-Z]\d[A-Z])\s*(\d[A-Z]\d)$/, '$1 $2'),
     country_code: address.countryCode.toUpperCase()
   }
 }
@@ -91,9 +91,13 @@ export async function getStallionRates(
       // Previous diagnostics already established that the basic request fails.
       const alternative = {
         to_address: request.to_address,
-        packages: request.packages.map(({ package_contents: _contents, ...parcel }) => parcel)
+        packages: request.packages.map(parcel => ({
+          weight: parcel.weight,
+          weight_unit: parcel.weight_unit,
+          package_contents: parcel.package_contents
+        }))
       }
-      console.info('[stallion] Retrying rate quote without optional package metadata')
+      console.info('[stallion] Retrying documented minimal rate request with package contents')
       try {
         const response = await client.quoteRates<StallionRate[]>(alternative)
         console.info('[stallion] Alternative rate request succeeded')
