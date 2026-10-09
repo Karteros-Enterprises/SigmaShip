@@ -31,6 +31,51 @@ interface PurchasedShipment {
   currency: string
 }
 
+const provinceOptions = [
+  { label: 'Ontario', value: 'ON' }, { label: 'Quebec', value: 'QC' },
+  { label: 'British Columbia', value: 'BC' }, { label: 'Alberta', value: 'AB' },
+  { label: 'Manitoba', value: 'MB' }, { label: 'Saskatchewan', value: 'SK' },
+  { label: 'Nova Scotia', value: 'NS' }, { label: 'New Brunswick', value: 'NB' },
+  { label: 'Newfoundland and Labrador', value: 'NL' }, { label: 'Prince Edward Island', value: 'PE' },
+  { label: 'Yukon', value: 'YT' }, { label: 'Northwest Territories', value: 'NT' },
+  { label: 'Nunavut', value: 'NU' }
+]
+const stateOptions = [
+  ...'AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC'.split(' ').map(value => ({ label: value, value }))
+]
+const addressOptions = (country: string) => country === 'US' ? stateOptions : provinceOptions
+const senderExtras = reactive({ reference: '', poBox: false, notifications: false, save: false, search: '' })
+const recipientExtras = reactive({ reference: '', poBox: false, notifications: false, save: false, search: '' })
+const addressBook = ref<{ label: string, address: CanonicalAddress }[]>([])
+const senderBookSelection = ref('')
+const recipientBookSelection = ref('')
+const addressBookItems = computed(() => addressBook.value.map((item, index) => ({ label: item.label, value: String(index) })))
+function selectSavedAddress(which: 'sender' | 'recipient', index: string) {
+  const entry = addressBook.value[Number(index)]
+  if (entry) Object.assign(which === 'sender' ? sender : recipient, entry.address)
+}
+function saveAddressesToBook() {
+  for (const [address, extras] of [[sender, senderExtras], [recipient, recipientExtras]] as const) {
+    if (extras.save) {
+      addressBook.value.push({ label: [address.company, address.contactName, address.city].filter(Boolean).join(' · '), address: { ...address } })
+      extras.save = false
+    }
+  }
+  if (import.meta.client) localStorage.setItem('sigmaship-address-book', JSON.stringify(addressBook.value))
+}
+onMounted(() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('sigmaship-address-book') || '[]')
+    if (Array.isArray(saved)) addressBook.value = saved
+  } catch { /* Ignore invalid locally saved entries. */ }
+})
+function clearAddress(which: 'sender' | 'recipient') {
+  const address = which === 'sender' ? sender : recipient
+  const extras = which === 'sender' ? senderExtras : recipientExtras
+  Object.assign(address, { contactName: '', company: '', address1: '', address2: '', city: '', region: '', postalCode: '', countryCode: 'CA', phone: '', email: '', residential: false })
+  Object.assign(extras, { reference: '', poBox: false, notifications: false, save: false, search: '' })
+}
+
 const countryOptions = [
   { label: 'Canada', value: 'CA' },
   { label: 'United States', value: 'US' }
@@ -129,6 +174,7 @@ async function compareRates() {
     })
 
     quotes.value = response.quotes
+    saveAddressesToBook()
   } catch (error: unknown) {
     toast.add({ title: 'Unable to fetch rates', description: getRequestErrorMessage(error, 'Please try again.'), color: 'error', icon: 'i-lucide-circle-alert' })
   } finally {
@@ -193,92 +239,105 @@ function money(amount: number, currency: string) {
         <UCard>
           <template #header>
             <div class="card-heading">
-              <div>
-                <p class="eyebrow">01 / FROM</p>
-                <h2>Sender</h2>
-              </div>
-              <UBadge color="neutral" variant="subtle">Required</UBadge>
+              <div><p class="eyebrow">01 / FROM</p><h2>Sender Address</h2></div>
+              <UButton type="button" color="neutral" variant="ghost" icon="i-lucide-eraser" @click="clearAddress('sender')">Clear</UButton>
             </div>
           </template>
-
           <div class="placeholder-grid">
-            <UFormField label="Contact name">
-              <UInput v-model="sender.contactName" class="w-full" required />
+            <UFormField label="Address Book" class="span-2">
+              <USelect v-model="senderBookSelection" class="w-full" :items="addressBookItems" placeholder="Search your saved addresses" @update:model-value="selectSavedAddress('sender', $event)" />
             </UFormField>
             <UFormField label="Company">
               <UInput v-model="sender.company" class="w-full" />
             </UFormField>
-            <UFormField label="Street address" class="span-2">
-              <UInput v-model="sender.address1" class="w-full" required />
+            <UFormField label="Attention / Contact name">
+              <UInput v-model="sender.contactName" class="w-full" required />
+            </UFormField>
+            <UFormField label="Search Address" class="span-2">
+              <UInput v-model="sender.address1" class="w-full" placeholder="Street address" required />
+            </UFormField>
+            <UFormField label="Address line 2" class="span-2">
+              <UInput v-model="sender.address2" class="w-full" placeholder="Unit, suite, building (optional)" />
+            </UFormField>
+            <UFormField label="Country">
+              <USelect v-model="sender.countryCode" class="w-full" :items="countryOptions" required @update:model-value="sender.region = ''" />
+            </UFormField>
+            <UFormField label="Province / State">
+              <USelect v-model="sender.region" class="w-full" :items="addressOptions(sender.countryCode)" placeholder="Select province / state" required />
             </UFormField>
             <UFormField label="City">
               <UInput v-model="sender.city" class="w-full" required />
             </UFormField>
-            <UFormField label="Province / State">
-              <UInput v-model="sender.region" class="w-full" required placeholder="ON" />
-            </UFormField>
             <UFormField label="Postal / ZIP">
               <UInput v-model="sender.postalCode" class="w-full" required />
             </UFormField>
-            <UFormField label="Country">
-              <USelect
-                v-model="sender.countryCode"
-                class="w-full"
-                :items="countryOptions"
-                required
-              />
+            <UFormField label="Phone">
+              <UInput v-model="sender.phone" type="tel" class="w-full" required />
             </UFormField>
+            <UFormField label="Email">
+              <UInput v-model="sender.email" type="email" class="w-full" />
+            </UFormField>
+            
+            <div class="span-2 address-options">
+              <label><input v-model="sender.residential" type="checkbox" /> Residential address</label>
+              <label><input v-model="senderExtras.notifications" type="checkbox" /> Shipment notification</label>
+              <label><input v-model="senderExtras.poBox" type="checkbox" /> P.O. Box</label>
+              <label><input v-model="senderExtras.save" type="checkbox" /> Save to address book</label>
+            </div>
           </div>
+          
         </UCard>
 
         <UCard>
           <template #header>
             <div class="card-heading">
-              <div>
-                <p class="eyebrow">02 / TO</p>
-                <h2>Recipient</h2>
-              </div>
+              <div><p class="eyebrow">02 / TO</p><h2>Recipient Address</h2></div>
+              <UButton type="button" color="neutral" variant="ghost" icon="i-lucide-eraser" @click="clearAddress('recipient')">Clear</UButton>
             </div>
           </template>
-
           <div class="placeholder-grid">
-            <UFormField label="Contact name">
-              <UInput v-model="recipient.contactName" class="w-full" required />
+            <UFormField label="Address Book" class="span-2">
+              <USelect v-model="recipientBookSelection" class="w-full" :items="addressBookItems" placeholder="Search your saved addresses" @update:model-value="selectSavedAddress('recipient', $event)" />
             </UFormField>
             <UFormField label="Company">
               <UInput v-model="recipient.company" class="w-full" />
             </UFormField>
-            <UFormField label="Street address" class="span-2">
-              <UInput v-model="recipient.address1" class="w-full" required />
+            <UFormField label="Attention / Contact name">
+              <UInput v-model="recipient.contactName" class="w-full" required />
+            </UFormField>
+            <UFormField label="Search Address" class="span-2">
+              <UInput v-model="recipient.address1" class="w-full" placeholder="Street address" required />
+            </UFormField>
+            <UFormField label="Address line 2" class="span-2">
+              <UInput v-model="recipient.address2" class="w-full" placeholder="Unit, suite, building (optional)" />
+            </UFormField>
+            <UFormField label="Country">
+              <USelect v-model="recipient.countryCode" class="w-full" :items="countryOptions" required @update:model-value="recipient.region = ''" />
+            </UFormField>
+            <UFormField label="Province / State">
+              <USelect v-model="recipient.region" class="w-full" :items="addressOptions(recipient.countryCode)" placeholder="Select province / state" required />
             </UFormField>
             <UFormField label="City">
               <UInput v-model="recipient.city" class="w-full" required />
             </UFormField>
-            <UFormField label="Province / State">
-              <UInput v-model="recipient.region" class="w-full" required placeholder="ON" />
-            </UFormField>
             <UFormField label="Postal / ZIP">
               <UInput v-model="recipient.postalCode" class="w-full" required />
             </UFormField>
-            <UFormField label="Country">
-              <USelect
-                v-model="recipient.countryCode"
-                class="w-full"
-                :items="countryOptions"
-                required
-              />
+            <UFormField label="Phone">
+              <UInput v-model="recipient.phone" type="tel" class="w-full" required />
             </UFormField>
+            <UFormField label="Email">
+              <UInput v-model="recipient.email" type="email" class="w-full" />
+            </UFormField>
+            <UFormField label="Reference code" class="span-2"><UInput v-model="recipientExtras.reference" class="w-full" /></UFormField>
+            <div class="span-2 address-options">
+              <label><input v-model="recipient.residential" type="checkbox" /> Residential address</label>
+              <label><input v-model="recipientExtras.notifications" type="checkbox" /> Shipment notification</label>
+              <label><input v-model="recipientExtras.poBox" type="checkbox" /> P.O. Box</label>
+              <label><input v-model="recipientExtras.save" type="checkbox" /> Save to address book</label>
+            </div>
           </div>
-
-          <UAlert
-            v-if="isInternational"
-            class="shipping-notice"
-            color="warning"
-            variant="subtle"
-            icon="i-lucide-globe-2"
-            title="Cross-border shipment"
-            description="Sandbox rating is available. Production carrier purchase will require customs details before launch."
-          />
+          <UAlert v-if="isInternational" class="shipping-notice" color="warning" variant="subtle" icon="i-lucide-globe-2" title="Cross-border shipment" description="Customs details are required before live international label purchase." />
         </UCard>
         <UButton class="address-swap" type="button" color="primary" variant="solid" icon="i-lucide-arrow-left-right" aria-label="Swap sender and recipient" title="Swap sender and recipient" @click="swapAddresses" />
         </div>
