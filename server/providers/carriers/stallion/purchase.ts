@@ -2,7 +2,7 @@ import { configuredStallionClient } from './client'
 import { toStallionRateRequest } from './rates'
 import type { CanonicalAddress, Package } from '#shared/types/domain'
 
-interface CreatedShipment { id: string }
+interface CreatedShipment { id: string | number }
 interface LabelResponse {
   tracking_code: string
   label_url: string
@@ -26,30 +26,32 @@ export async function purchaseStallionLabel(input: StallionPurchaseInput) {
     throw new Error('Stallion shipment creation is disabled.')
   }
   const client = configuredStallionClient()
-  const request = toStallionRateRequest(input.sender, input.recipient, input.packages)
+  const rateRequest = toStallionRateRequest(input.sender, input.recipient, input.packages)
+  const request = { to_address: rateRequest.to_address, packages: rateRequest.packages }
   const created = await client.createShipment<CreatedShipment>(
     request, `${input.idempotencyKey}:create`
   )
   if (!created.data?.id) {
     throw new Error('Stallion did not return a shipment ID.')
   }
+  const providerShipmentId = String(created.data.id)
   const rates = await client.getShipmentRates<Array<{
     service?: string
     carrier?: { service_code?: string }
-  }>>(created.data.id)
-  if (!rates.data.some(rate =>
+  }>>(providerShipmentId)
+  if (!Array.isArray(rates.data) || !rates.data.some(rate =>
     (rate.carrier?.service_code || rate.service) === input.serviceCode
   )) {
     throw new Error('Selected Stallion service is no longer available.')
   }
   const label = await client.purchaseLabel<LabelResponse>(
-    created.data.id, input.serviceCode, `${input.idempotencyKey}:label`
+    providerShipmentId, input.serviceCode, `${input.idempotencyKey}:label`
   )
   if (!label.data?.tracking_code || !label.data?.label_url) {
     throw new Error('Stallion did not return a complete label.')
   }
   return {
-    providerShipmentId: created.data.id,
+    providerShipmentId,
     trackingNumber: label.data.tracking_code,
     labelUrl: label.data.label_url,
     trackingUrl: label.data.tracking_url
