@@ -1715,3 +1715,20 @@ button[class*="bg-primary"],.shipment-form-stack button[type=submit]{background:
     top: 50% !important;
   }
 }
+
+
+/* Prevent browser autofill from turning completed shipping fields grey.
+   Keep the approved white surface for all filled, autofilled and focused states. */
+.shipment-form-stack .address-pair input:-webkit-autofill,
+.shipment-form-stack .address-pair input:-webkit-autofill:hover,
+.shipment-form-stack .address-pair input:-webkit-autofill:focus,
+.shipment-form-stack .package-grid input:-webkit-autofill,
+.shipment-form-stack .package-grid input:-webkit-autofill:hover,
+.shipment-form-stack .package-grid input:-webkit-autofill:focus {
+  background-color: #fff !important;
+  -webkit-text-fill-color: #0b0c0f !important;
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important;
+  box-shadow: 0 0 0 1000px #fff inset !important;
+  caret-color: #0b0c0f !important;
+  transition: background-color 9999s ease-out 0s;
+}
