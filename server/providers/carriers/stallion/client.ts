@@ -50,7 +50,7 @@ export function createStallionClient(options: StallionClientOptions) {
     if (!path.startsWith('/') || path.startsWith('//')) {
       throw new Error('Stallion request path must be relative.')
     }
-    if (isProduction && method !== 'GET' && process.env.STALLION_LIVE_WRITES_ENABLED !== 'true') {
+    if (isProduction && method !== 'GET' && !(method === 'POST' && path === '/rates') && process.env.STALLION_LIVE_WRITES_ENABLED !== 'true') {
       throw new Error('Live Stallion writes are disabled.')
     }
     const controller = new AbortController()
