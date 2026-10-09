@@ -23,6 +23,7 @@ export async function requireShippingContext(event: H3Event) {
     .maybeSingle()
 
   if (error) {
+    console.error('[shipping/context] Membership lookup failed', { code: error.code, message: error.message, details: error.details, hint: error.hint })
     throw createError({
       statusCode: 503,
       statusMessage: 'Unable to verify your ΣigmaSpace membership. Please try again.'
@@ -39,6 +40,7 @@ export async function requireShippingContext(event: H3Event) {
   const { data: organization, error: organizationError } = await service.from('organizations')
     .select('is_active').eq('id', membership.organization_id).maybeSingle()
   if (organizationError || !organization) {
+    console.error('[shipping/context] Organization lookup failed', { code: organizationError?.code, message: organizationError?.message })
     throw createError({ statusCode: 503, statusMessage: 'Unable to verify ΣigmaSpace status.' })
   }
   if (!organization.is_active) {
