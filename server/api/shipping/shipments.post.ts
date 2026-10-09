@@ -2,6 +2,7 @@ import { serverSupabaseServiceRole } from '#supabase/server'
 import { purchaseShipmentSchema } from '#shared/schemas/shipping'
 import type { Database, Json } from '~/types/database.types'
 import { getSandboxCarrier } from '../../utils/carrier'
+import { purchaseStallionLabel } from '../../providers/carriers/stallion/purchase'
 import { requireShippingContext } from '../../utils/shipping-context'
 
 export default defineEventHandler(async (event) => {
@@ -37,19 +38,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  if (quote.provider === 'stallion') {
-    console.warn('[shipping/shipments] Stallion purchase blocked: carrier booking and label workflow not implemented', {
-      quoteId: quote.id,
-      serviceCode: quote.service_code,
-      environment: process.env.STALLION_BASE_URL?.includes('sandbox') ? 'sandbox' : 'production'
-    })
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'Stallion rates are available, but purchasing Stallion labels is not yet enabled. No shipment was created or charged.'
-    })
-  }
-
-  if (quote.provider !== 'sandbox') {
+  if (quote.provider !== 'sandbox' && quote.provider !== 'stallion') {
     throw createError({
       statusCode: 400,
       statusMessage: 'This shipping provider does not support label purchase yet.'
@@ -57,9 +46,23 @@ export default defineEventHandler(async (event) => {
   }
 
   const shipmentId = crypto.randomUUID()
-  const idempotencyKey = crypto.randomUUID()
-  const carrier = getSandboxCarrier()
-  const purchased = await carrier.purchaseLabel({
+  const idempotencyKey = `sigmaship-${quote.id}`
+  const carrier = quote.provider === 'sandbox' ? getSandboxCarrier() : null
+  const purchased = quote.provider === 'stallion'
+    ? await purchaseStallionLabel({
+        sender: body.sender,
+        recipient: body.recipient,
+        packages: body.packages,
+        serviceCode: quote.service_code,
+        idempotencyKey
+      }).then(label => ({
+        provider: 'stallion',
+        trackingNumber: label.trackingNumber,
+        trackingUrl: label.trackingUrl,
+        labelUrl: label.labelUrl,
+        carrierCost: { amount: Number(quote.carrier_cost), currency: quote.currency }
+      }))
+    : await carrier!.purchaseLabel({
     organizationId,
     shipmentId,
     serviceCode: quote.service_code,
@@ -104,7 +107,7 @@ export default defineEventHandler(async (event) => {
     })
 
   if (shipmentError) {
-    await carrier.cancelLabel?.(purchased.trackingNumber)
+    await carrier?.cancelLabel?.(purchased.trackingNumber)
 
     throw createError({
       statusCode: 500,
