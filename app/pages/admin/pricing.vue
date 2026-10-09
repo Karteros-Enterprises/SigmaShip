@@ -45,7 +45,7 @@ async function save(client: Client) {
   saving.value = client.id
   try {
     await $fetch('/api/admin/clients/' + client.id, { method: 'PATCH', body: draft })
-    delete drafts[client.id]
+    drafts[client.id] = undefined as never
     await refresh()
     message.value = client.name + ' pricing updated. New quotes will use the new markup.'
   } catch (err) {
@@ -80,7 +80,7 @@ async function save(client: Client) {
             <UFormField label="Accessorial fixed markup (CAD)"><UInput v-model.number="drafts[client.id]!.accessorialMarkupFixed" type="number" min="0" step="0.01" /></UFormField>
             <div class="span-2" style="display:flex;gap:.75rem;flex-wrap:wrap">
               <UButton :loading="saving === client.id" @click="save(client)">Save pricing</UButton>
-              <UButton color="neutral" variant="outline" @click="delete drafts[client.id]">Cancel</UButton>
+              <UButton color="neutral" variant="outline" @click="drafts[client.id] = undefined as never">Cancel</UButton>
             </div>
           </div>
           <div v-else class="placeholder-grid">
