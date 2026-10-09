@@ -2,7 +2,7 @@ import type { CanonicalAddress, Package } from '#shared/types/domain'
 import type { CarrierRate } from '#shared/contracts/carrier'
 import { configuredStallionClient, StallionApiError } from './client'
 
-function stallionAddress(address: CanonicalAddress) {
+export function stallionAddress(address: CanonicalAddress) {
   const country = address.countryCode.trim().toUpperCase()
   const postal = address.postalCode.trim().toUpperCase().replace(/\s+/g, '')
   const postalCode = country === 'CA' && /^[A-Z][0-9][A-Z][0-9][A-Z][0-9]$/.test(postal)
@@ -18,7 +18,7 @@ function stallionAddress(address: CanonicalAddress) {
   }
 }
 
-function stallionPackage(parcel: Package) {
+export function stallionPackage(parcel: Package) {
   const lb = parcel.weightUnit === 'kg' ? parcel.weight * 2.2046226218 : parcel.weight
   const inches = parcel.dimensionUnit === 'cm' ? 1 / 2.54 : 1
   return {
