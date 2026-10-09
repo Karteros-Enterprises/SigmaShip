@@ -37,7 +37,8 @@ export function toStallionRateRequest(
   packages: Package[]
 ) {
   return {
-    from_address: stallionAddress(sender),
+    // Stallion parcel rates use the account origin; retain sender in SigmaShip
+    // for shipment records and carriers that support explicit origins.
     to_address: stallionAddress(recipient),
     packages: packages.map(stallionPackage)
   }
