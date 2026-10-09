@@ -63,7 +63,7 @@ async function resendConfirmation() {
     return
   }
 
-  resendMessage.value = 'Confirmation email sent again. Check your inbox and spam folder.'
+  resendMessage.value = 'If the account is awaiting verification, another confirmation link will be sent. Check your inbox and spam folder.'
 }
 </script>
 
@@ -134,7 +134,7 @@ async function resendConfirmation() {
       <div v-else class="auth-heading">
         <p class="auth-eyebrow">CHECK YOUR EMAIL</p>
         <h1>Confirm your account.</h1>
-        <p>We sent a confirmation link to <strong>{{ email }}</strong>.</p>
+        <p>If this email is eligible for registration, a confirmation link will be sent to <strong>{{ email }}</strong>. If you already have an account, sign in or reset your password.</p>
         <p v-if="resendMessage">{{ resendMessage }}</p>
         <UAlert v-if="resendError" color="error" variant="subtle" :description="resendError" />
         <UButton variant="outline" :loading="submitting" @click="resendConfirmation">Resend confirmation email</UButton>
